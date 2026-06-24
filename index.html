@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sama Veda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --saffron:    #C45E1A;
+    --saffron-lt: #F5E6D8;
+    --ink:        #1C1A16;
+    --ink-mid:    #4A4640;
+    --ink-soft:   #8A857C;
+    --parchment:  #FAF7F2;
+    --parchment-d:#F0EBE1;
+    --white:      #FFFFFF;
+    --border:     rgba(28,26,22,0.12);
+    --border-md:  rgba(28,26,22,0.22);
+    --radius:     10px;
+    --radius-lg:  16px;
+    --serif:      'Crimson Pro', Georgia, serif;
+    --sans:       'Inter', system-ui, sans-serif;
+    --player-h:   90px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --saffron:    #E07830;
+      --saffron-lt: #2E1E0E;
+      --ink:        #F0EBE1;
+      --ink-mid:    #C0B8AC;
+      --ink-soft:   #7A7570;
+      --parchment:  #1A1816;
+      --parchment-d:#141210;
+      --white:      #201E1A;
+      --border:     rgba(240,235,225,0.10);
+      --border-md:  rgba(240,235,225,0.20);
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--parchment);
+    color: var(--ink);
+    min-height: 100vh;
+    padding-bottom: calc(var(--player-h) + 2rem);
+  }
+
+  /* ── HEADER ── */
+  #site-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+  .logo {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo-dot { color: var(--saffron); font-size: 28px; line-height: 1; }
+  #user-area { display: flex; align-items: center; gap: 10px; }
+  #user-email { font-size: 12px; color: var(--ink-soft); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: none; }
+  #logout-btn {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: none;
+    border: 1px solid var(--border-md);
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    display: none;
+    transition: all 0.15s;
+  }
+  #logout-btn:hover { color: var(--saffron); border-color: var(--saffron); background: var(--saffron-lt); }
+
+  /* ── PAGE ── */
+  #page { max-width: 680px; margin: 0 auto; padding: 1.5rem 1.25rem; }
+
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Sign-in */
+  #signin-view.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 1rem 3rem;
+    text-align: center;
+  }
+  .signin-icon {
+    font-size: 48px;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+  }
+  .signin-title {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+    font-style: italic;
+  }
+  .signin-sub {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 2rem;
+    max-width: 340px;
+    line-height: 1.6;
+  }
+  #signin-btn {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    background: var(--saffron);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 0 24px;
+    height: 44px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.15s;
+    letter-spacing: 0.01em;
+  }
+  #signin-btn:hover { opacity: 0.88; }
+  #signin-btn:active { transform: scale(0.98); }
+
+  /* No sheet */
+  #no-sheet-view.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4rem 1rem 2rem;
+    text-align: center;
+  }
+  #no-sheet-view p { font-size: 14px; color: var(--ink-soft); margin-bottom: 1rem; max-width: 380px; line-height: 1.6; }
+  #sheet-id-input {
+    font-family: var(--sans);
+    font-size: 14px;
+    width: 100%;
+    max-width: 400px;
+    height: 40px;
+    border: 1px solid var(--border-md);
+    border-radius: var(--radius);
+    background: var(--white);
+    color: var(--ink);
+    padding: 0 12px;
+    margin-bottom: 10px;
+    outline: none;
+  }
+  #sheet-id-input:focus { border-color: var(--saffron); }
+  #sheet-submit-btn {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--saffron);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 0 20px;
+    height: 38px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  #sheet-submit-btn:hover { opacity: 0.88; }
+
+  /* Loading */
+  #loading-view.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 5rem 1rem;
+    gap: 12px;
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2.5px solid var(--border);
+    border-top-color: var(--saffron);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: var(--ink-soft); }
+
+  /* Error */
+  .error-text {
+    display: none;
+    font-size: 13px;
+    color: #9B2020;
+    margin-top: 12px;
+    max-width: 420px;
+    line-height: 1.5;
+    background: #FDF0F0;
+    border: 1px solid #F0CACA;
+    border-radius: var(--radius);
+    padding: 10px 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .error-text { background: #2A1010; border-color: #5A2020; color: #F0A0A0; }
+  }
+
+  /* ── SEARCH ── */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 1.25rem;
+  }
+  .search-icon {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-soft);
+    font-size: 15px;
+    pointer-events: none;
+  }
+  #search-input {
+    font-family: var(--sans);
+    font-size: 14px;
+    width: 100%;
+    height: 42px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    color: var(--ink);
+    padding: 0 12px 0 38px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  #search-input:focus {
+    border-color: var(--saffron);
+    box-shadow: 0 0 0 3px var(--saffron-lt);
+  }
+  #search-input::placeholder { color: var(--ink-soft); }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+
+  /* ── COLLECTION CARD ── */
+  .col-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .col-card:hover { border-color: var(--border-md); }
+
+  .col-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s;
+  }
+  .col-header:hover { background: var(--parchment-d); }
+
+  .col-icon {
+    width: 38px; height: 38px;
+    border-radius: 8px;
+    background: var(--saffron-lt);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+  }
+
+  .col-info { flex: 1; min-width: 0; }
+  .col-name {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+  .col-meta {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  .col-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  .play-all-btn {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--saffron);
+    background: var(--saffron-lt);
+    border: 1px solid rgba(196,94,26,0.25);
+    border-radius: 6px;
+    padding: 0 12px;
+    height: 30px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .play-all-btn:hover { background: var(--saffron); color: #fff; }
+  .play-all-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .chevron {
+    font-size: 12px;
+    color: var(--ink-soft);
+    transition: transform 0.2s;
+    width: 16px;
+    text-align: center;
+  }
+  .chevron.open { transform: rotate(90deg); }
+
+  /* ── TRACK LIST ── */
+  .track-list {
+    border-top: 1px solid var(--border);
+  }
+
+  .track-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 16px 11px 20px;
+    cursor: pointer;
+    border-top: 1px solid var(--border);
+    transition: background 0.1s;
+    position: relative;
+  }
+  .track-row:first-child { border-top: none; }
+  .track-row:hover { background: var(--parchment); }
+  .track-row.playing { background: var(--saffron-lt); }
+  .track-row.playing::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--saffron);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .track-num {
+    font-size: 12px;
+    color: var(--ink-soft);
+    width: 20px;
+    text-align: right;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .track-row.playing .track-num { color: var(--saffron); }
+
+  .track-play-icon {
+    font-size: 11px;
+    color: var(--ink-soft);
+    flex-shrink: 0;
+    width: 14px;
+    text-align: center;
+  }
+  .track-row.playing .track-play-icon { color: var(--saffron); }
+  .track-row:hover .track-play-icon { color: var(--saffron); }
+
+  .track-name {
+    font-family: var(--serif);
+    font-size: 16px;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+
+  /* ── EMPTY / NO-MATCH ── */
+  #empty-state {
+    display: none;
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  .empty-title { font-family: var(--serif); font-size: 20px; font-weight: 300; font-style: italic; color: var(--ink-mid); margin-bottom: 6px; }
+  .empty-sub { font-size: 13px; color: var(--ink-soft); }
+
+  /* ── PLAYER BAR ── */
+  #player-bar {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: var(--player-h);
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    z-index: 20;
+    padding: 10px 1.25rem 10px;
+  }
+  #player-inner {
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  #now-playing-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #now-playing-pip {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--saffron);
+    flex-shrink: 0;
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.75); }
+  }
+  #now-playing-text { flex: 1; min-width: 0; }
+  #now-playing-track {
+    font-family: var(--serif);
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+  #now-playing-col {
+    font-size: 11px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #queue-badge {
+    font-size: 11px;
+    color: var(--ink-soft);
+    flex-shrink: 0;
+    background: var(--parchment-d);
+    border-radius: 20px;
+    padding: 2px 8px;
+  }
+  audio {
+    width: 100%;
+    height: 28px;
+    display: block;
+    accent-color: var(--saffron);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 480px) {
+    #user-email { display: none !important; }
+    .col-name { font-size: 16px; }
+    .play-all-btn span { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header id="site-header">
+  <div class="logo">
+    <span class="logo-dot">॰</span>
+    Sama Veda
+  </div>
+  <div id="user-area">
+    <span id="user-email"></span>
+    <button id="logout-btn">Sign out</button>
+  </div>
+</header>
+
+<div id="page">
+
+  <!-- No sheet view -->
+  <div id="no-sheet-view" class="view">
+    <p>No class link detected. Use the link your teacher shared with you.<br><br>
+    Testing? Paste a Spreadsheet ID below:</p>
+    <input type="text" id="sheet-id-input" placeholder="Paste Spreadsheet ID" />
+    <button id="sheet-submit-btn">Continue</button>
+    <div class="error-text" id="no-sheet-error"></div>
+  </div>
+
+  <!-- Sign-in view -->
+  <div id="signin-view" class="view">
+    <div class="signin-icon">𝄞</div>
+    <div class="signin-title">Your Sama Veda library</div>
+    <p class="signin-sub">Sign in with Google to access your class recordings.</p>
+    <button id="signin-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
+      Sign in with Google
+    </button>
+    <div class="error-text" id="signin-error"></div>
+  </div>
+
+  <!-- Loading view -->
+  <div id="loading-view" class="view">
+    <div class="spinner"></div>
+    <p class="loading-text">Loading your collections…</p>
+  </div>
+
+  <!-- Main view -->
+  <div id="main-view" class="view">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search-input" placeholder="Search collections or tracks…" autocomplete="off" />
+    </div>
+    <p class="section-label" id="section-label">Collections</p>
+    <div id="collections-list"></div>
+    <div id="empty-state">
+      <div class="empty-title">No results</div>
+      <p class="empty-sub">Try a different search term.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Player bar -->
+<div id="player-bar">
+  <div id="player-inner">
+    <div id="now-playing-row">
+      <div id="now-playing-pip"></div>
+      <div id="now-playing-text">
+        <div id="now-playing-track">—</div>
+        <div id="now-playing-col">—</div>
+      </div>
+      <span id="queue-badge" style="display:none"></span>
+    </div>
+    <audio id="audio-el" controls></audio>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const CLIENT_ID = '730888202622-b4ttnasrooktvq7gm7rcng6l1tu0gfcu.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/spreadsheets.readonly';
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let accessToken = null;
+let sheetId = null;
+let collections = [];
+let playQueue = [];
+let queueIndex = -1;
+let tokenClient = null;
+let currentTrackId = null;
+let userEmail = null;
+
+// ── ELEMENTS ──────────────────────────────────────────────────────────────────
+const signinView    = document.getElementById('signin-view');
+const loadingView   = document.getElementById('loading-view');
+const mainView      = document.getElementById('main-view');
+const noSheetView   = document.getElementById('no-sheet-view');
+const playerBar     = document.getElementById('player-bar');
+const audioEl       = document.getElementById('audio-el');
+const searchInput   = document.getElementById('search-input');
+const colsList      = document.getElementById('collections-list');
+const emptyState    = document.getElementById('empty-state');
+const sectionLabel  = document.getElementById('section-label');
+const userEmailEl   = document.getElementById('user-email');
+const logoutBtn     = document.getElementById('logout-btn');
+
+// ── VIEWS ─────────────────────────────────────────────────────────────────────
+function setView(name) {
+  ['signin','loading','main','nosheet'].forEach(v => {
+    const el = document.getElementById(v === 'nosheet' ? 'no-sheet-view' : v + '-view');
+    el.classList.toggle('active', v === name);
+  });
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = String(s || '');
+  return d.innerHTML;
+}
+
+// Case-insensitive header lookup
+function makeRowMapper(headers) {
+  const lower = headers.map(h => h.trim().toLowerCase());
+  return function get(row, key) {
+    const idx = lower.indexOf(key.toLowerCase());
+    return idx >= 0 ? (row[idx] || '').trim() : '';
+  };
+}
+
+function getSheetIdFromUrl() {
+  return new URLSearchParams(window.location.search).get('sheet') || null;
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+function waitForGoogle() {
+  return new Promise((resolve, reject) => {
+    let tries = 0;
+    const t = setInterval(() => {
+      if (window.google?.accounts?.oauth2) { clearInterval(t); resolve(); }
+      else if (++tries > 120) { clearInterval(t); reject(new Error('Google sign-in library did not load. Check your internet connection and that this page\'s URL is an Authorized JavaScript origin in your Google Cloud OAuth client.')); }
+    }, 100);
+  });
+}
+
+async function initAuth() {
+  try {
+    await waitForGoogle();
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (resp) => {
+        if (resp.error) {
+          showError('signin-error', 'Sign-in failed: ' + resp.error + '. Make sure this page\'s URL is an Authorized JavaScript origin in your Google Cloud OAuth client.');
+          return;
+        }
+        accessToken = resp.access_token;
+        // Get user email from token info
+        try {
+          const info = await fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=' + accessToken);
+          const data = await info.json();
+          userEmail = data.email || '';
+          userEmailEl.textContent = userEmail;
+          userEmailEl.style.display = userEmail ? 'block' : 'none';
+          logoutBtn.style.display = 'block';
+        } catch(_) {}
+        showError('signin-error', '');
+        await loadData();
+      }
+    });
+
+    document.getElementById('signin-btn').addEventListener('click', () => {
+      showError('signin-error', '');
+      try { tokenClient.requestAccessToken(); }
+      catch (e) { showError('signin-error', 'Could not open sign-in popup: ' + e.message); }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      if (accessToken) {
+        google.accounts.oauth2.revoke(accessToken, () => {});
+      }
+      accessToken = null;
+      userEmail = null;
+      collections = [];
+      playQueue = [];
+      currentTrackId = null;
+      audioEl.src = '';
+      playerBar.style.display = 'none';
+      userEmailEl.style.display = 'none';
+      logoutBtn.style.display = 'none';
+      setView('signin');
+    });
+
+  } catch (e) {
+    showError('signin-error', e.message);
+  }
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function sheetsFetch(id, range) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}`;
+  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
+  if (!res.ok) throw new Error('Sheets API ' + res.status + ': ' + (await res.text()).slice(0, 300));
+  return res.json();
+}
+
+// ── LOAD DATA ─────────────────────────────────────────────────────────────────
+async function loadData() {
+  setView('loading');
+  try {
+    const [colsData, tracksData] = await Promise.all([
+      sheetsFetch(sheetId, 'Collections!A:Z'),
+      sheetsFetch(sheetId, 'Tracks!A:Z')
+    ]);
+
+    const colRows   = colsData.values   || [];
+    const trackRows = tracksData.values || [];
+
+    if (colRows.length < 2 || trackRows.length < 2) {
+      throw new Error('No data found. Check that the Collections and Tracks tabs have headers and at least one row of data.');
+    }
+
+    const colGet   = makeRowMapper(colRows[0]);
+    const trackGet = makeRowMapper(trackRows[0]);
+
+    // Build collections map
+    const colMap = {};
+    colRows.slice(1).forEach(row => {
+      const id = colGet(row, 'CollectionID');
+      if (!id) return;
+      colMap[id] = {
+        id,
+        name: colGet(row, 'CollectionName') || id,
+        tracks: [],
+        expanded: false
+      };
+    });
+
+    // Attach tracks
+    trackRows.slice(1).forEach(row => {
+      const colId  = trackGet(row, 'CollectionID');
+      const fileId = trackGet(row, 'DriveFileID');
+      if (!colId || !fileId || !colMap[colId]) return;
+      colMap[colId].tracks.push({
+        id: trackGet(row, 'TrackID') || fileId,
+        name: trackGet(row, 'TrackName') || '(unnamed)',
+        fileId,
+        order: parseInt(trackGet(row, 'TrackOrder')) || 999
+      });
+    });
+
+    // Sort tracks
+    Object.values(colMap).forEach(col => col.tracks.sort((a, b) => a.order - b.order));
+
+    collections = Object.values(colMap).filter(c => c.tracks.length > 0);
+
+    setView('main');
+    renderCollections();
+
+  } catch (e) {
+    setView('signin');
+    showError('signin-error', 'Could not load sheet data: ' + e.message);
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+const ICONS = ['📿','🪘','🎵','🕉️','🎶','🪗','🎼','🔔'];
+
+function renderCollections(filterText) {
+  const q = (filterText || '').trim().toLowerCase();
+  colsList.innerHTML = '';
+  let anyVisible = false;
+
+  collections.forEach((col, ci) => {
+    const colMatches   = col.name.toLowerCase().includes(q);
+    const matchTracks  = col.tracks.filter(t => t.name.toLowerCase().includes(q));
+    const hasMatch     = !q || colMatches || matchTracks.length > 0;
+    if (!hasMatch) return;
+    anyVisible = true;
+
+    const shouldExpand = q ? true : col.expanded;
+    const tracksToShow = (q && !colMatches) ? matchTracks : col.tracks;
+
+    const card = document.createElement('div');
+    card.className = 'col-card';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'col-header';
+    header.innerHTML = `
+      <div class="col-icon">${ICONS[ci % ICONS.length]}</div>
+      <div class="col-info">
+        <div class="col-name">${esc(col.name)}</div>
+        <div class="col-meta">${col.tracks.length} track${col.tracks.length === 1 ? '' : 's'}</div>
+      </div>
+      <div class="col-actions">
+        <button class="play-all-btn" ${col.tracks.length === 0 ? 'disabled' : ''}>
+          ▶ <span>Play all</span>
+        </button>
+        <span class="chevron ${shouldExpand ? 'open' : ''}">▶</span>
+      </div>
+    `;
+
+    header.querySelector('.play-all-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      startQueue(col, col.tracks, 0);
+    });
+    header.addEventListener('click', () => {
+      col.expanded = !shouldExpand;
+      renderCollections(searchInput.value);
+    });
+    card.appendChild(header);
+
+    // Tracks
+    if (shouldExpand) {
+      const tList = document.createElement('div');
+      tList.className = 'track-list';
+
+      if (tracksToShow.length === 0) {
+        tList.innerHTML = '<div style="padding:12px 16px; font-size:13px; color:var(--ink-soft);">No tracks</div>';
+      } else {
+        tracksToShow.forEach((track) => {
+          const isPlaying = track.id === currentTrackId;
+          const row = document.createElement('div');
+          row.className = 'track-row' + (isPlaying ? ' playing' : '');
+          row.innerHTML = `
+            <span class="track-num">${track.order}</span>
+            <span class="track-play-icon">${isPlaying ? '♪' : '▶'}</span>
+            <span class="track-name">${esc(track.name)}</span>
+          `;
+          row.addEventListener('click', () => startQueue(col, [track], 0));
+          tList.appendChild(row);
+        });
+      }
+      card.appendChild(tList);
+    }
+
+    colsList.appendChild(card);
+  });
+
+  emptyState.style.display = anyVisible ? 'none' : 'block';
+  sectionLabel.textContent = q
+    ? `Results for "${filterText}"`
+    : `${collections.length} Collection${collections.length === 1 ? '' : 's'}`;
+}
+
+// ── PLAYBACK ──────────────────────────────────────────────────────────────────
+function startQueue(col, tracks, startIdx) {
+  playQueue  = tracks.map(t => ({ ...t, collectionName: col.name }));
+  queueIndex = startIdx;
+  playItem();
+}
+
+function playItem() {
+  const item = playQueue[queueIndex];
+  if (!item) return;
+
+  currentTrackId = item.id;
+
+  fetch(`https://www.googleapis.com/drive/v3/files/${item.fileId}?alt=media`, {
+    headers: { Authorization: 'Bearer ' + accessToken }
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('Drive ' + res.status);
+    return res.blob();
+  })
+  .then(blob => {
+    audioEl.src = URL.createObjectURL(blob);
+    audioEl.play().catch(() => {});
+  })
+  .catch(e => showError('signin-error', 'Could not load audio: ' + e.message + '. Check that your Google account has Viewer access to the Drive audio files.'));
+
+  document.getElementById('now-playing-track').textContent = item.name;
+  document.getElementById('now-playing-col').textContent   = item.collectionName;
+
+  const badge = document.getElementById('queue-badge');
+  if (playQueue.length > 1) {
+    badge.textContent = `${queueIndex + 1} / ${playQueue.length}`;
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
+
+  playerBar.style.display = 'block';
+  renderCollections(searchInput.value);
+}
+
+audioEl.addEventListener('ended', () => {
+  if (queueIndex < playQueue.length - 1) { queueIndex++; playItem(); }
+});
+
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+searchInput.addEventListener('input', e => renderCollections(e.target.value));
+
+// ── NO-SHEET FALLBACK ─────────────────────────────────────────────────────────
+document.getElementById('sheet-submit-btn').addEventListener('click', () => {
+  const val = document.getElementById('sheet-id-input').value.trim();
+  if (!val) { showError('no-sheet-error', 'Paste a Spreadsheet ID to continue.'); return; }
+  sheetId = val;
+  setView('signin');
+  initAuth();
+});
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+(async function boot() {
+  const urlSheetId = getSheetIdFromUrl();
+  if (urlSheetId) {
+    sheetId = urlSheetId;
+    setView('signin');
+    await initAuth();
+  } else {
+    setView('nosheet');
+  }
+})();
+</script>
+</body>
+</html>
