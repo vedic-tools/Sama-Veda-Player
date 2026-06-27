@@ -12,6 +12,7 @@
     --ink:#1C1A16; --ink-mid:#4A4640; --ink-soft:#8A857C;
     --parchment:#FAF7F2; --parchment-d:#F0EBE1; --white:#FFFFFF;
     --danger:#C0392B; --danger-lt:#FDECEA;
+    --success:#2E7D32; --success-lt:#E8F5E9;
     --learning:#1A56A4; --learning-lt:#EEF4FF;
     --final:#2E7D32; --final-lt:#E8F5E9;
     --border:rgba(28,26,22,0.12); --border-md:rgba(28,26,22,0.22);
@@ -25,6 +26,7 @@
       --ink:#F0EBE1; --ink-mid:#C0B8AC; --ink-soft:#7A7570;
       --parchment:#1A1816; --parchment-d:#141210; --white:#201E1A;
       --danger:#EF5350; --danger-lt:#2A1010;
+      --success:#66BB6A; --success-lt:#0A2010;
       --learning:#6B9FE4; --learning-lt:#0A1A3A;
       --final:#66BB6A; --final-lt:#0A2010;
       --border:rgba(240,235,225,0.10); --border-md:rgba(240,235,225,0.20);
@@ -38,9 +40,11 @@
   .logo{font-family:var(--serif);font-size:22px;font-weight:300;color:var(--ink);display:flex;align-items:center;gap:8px;}
   .logo-dot{color:var(--saffron);font-size:28px;line-height:1;}
   #user-area{display:flex;align-items:center;gap:10px;}
-  #user-email{font-size:12px;color:var(--ink-soft);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none;}
+  #learner-name-el{font-size:12px;color:var(--ink-soft);display:none;}
   #logout-btn{font-family:var(--sans);font-size:12px;color:var(--ink-soft);background:none;border:1px solid var(--border-md);border-radius:6px;padding:4px 10px;cursor:pointer;display:none;transition:all 0.15s;}
   #logout-btn:hover{color:var(--saffron);border-color:var(--saffron);background:var(--saffron-lt);}
+  #class-badge{display:none;font-size:12px;color:var(--ink-soft);background:var(--parchment-d);border-radius:20px;padding:3px 10px;cursor:pointer;transition:all 0.15s;border:1px solid var(--border);}
+  #class-badge:hover{border-color:var(--saffron);color:var(--saffron);}
 
   /* PAGE */
   #page{max-width:680px;margin:0 auto;padding:1.5rem 1.25rem;}
@@ -48,43 +52,49 @@
   /* VIEWS */
   .view{display:none;}
   .view.active{display:block;}
-  #signin-view.active,#class-select-view.active{display:flex;flex-direction:column;align-items:center;padding:4rem 1rem 3rem;text-align:center;}
+  #signin-view.active,#login-view.active,#set-password-view.active,
+  #change-password-view.active,#class-select-view.active{
+    display:flex;flex-direction:column;align-items:center;padding:3.5rem 1rem 2rem;text-align:center;
+  }
   #loading-view.active{display:flex;flex-direction:column;align-items:center;padding:5rem 1rem;gap:12px;}
 
-  /* SIGN-IN */
-  .signin-icon{font-size:48px;margin-bottom:1rem;opacity:0.7;}
-  .signin-title{font-family:var(--serif);font-size:28px;font-weight:300;font-style:italic;margin-bottom:0.5rem;}
-  .signin-sub{font-size:14px;color:var(--ink-soft);margin-bottom:2rem;max-width:340px;line-height:1.6;}
-  #signin-btn{font-family:var(--sans);font-size:14px;font-weight:500;background:var(--saffron);color:#fff;border:none;border-radius:var(--radius);padding:0 24px;height:44px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:opacity 0.15s;}
-  #signin-btn:hover{opacity:0.88;}
-  #signin-btn:active{transform:scale(0.98);}
+  /* SHARED FORM STYLES */
+  .auth-icon{font-size:44px;margin-bottom:1rem;opacity:0.8;}
+  .auth-title{font-family:var(--serif);font-size:26px;font-weight:300;font-style:italic;margin-bottom:0.5rem;}
+  .auth-sub{font-size:14px;color:var(--ink-soft);margin-bottom:1.75rem;max-width:360px;line-height:1.6;}
+  .auth-card{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;text-align:left;}
+  .field-label{font-size:12px;font-weight:500;color:var(--ink-mid);text-transform:uppercase;letter-spacing:0.04em;display:block;margin-bottom:4px;}
+  .shared-account-hint{font-size:12px;color:var(--ink-soft);background:var(--parchment-d);border-radius:var(--radius);padding:8px 12px;line-height:1.5;text-align:left;}
+  .shared-account-hint strong{color:var(--ink);}
 
-  /* CLASS SELECT */
-  .class-select-title{font-family:var(--serif);font-size:24px;font-weight:300;font-style:italic;margin-bottom:0.5rem;}
-  .class-select-sub{font-size:14px;color:var(--ink-soft);margin-bottom:1.5rem;max-width:360px;line-height:1.6;}
-  .class-select-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px;}
+  /* INPUTS */
+  input[type="text"],input[type="password"]{font-family:var(--sans);font-size:14px;width:100%;height:42px;border:1px solid var(--border-md);border-radius:var(--radius);background:var(--white);color:var(--ink);padding:0 12px;outline:none;transition:border-color 0.15s,box-shadow 0.15s;}
+  input:focus{border-color:var(--saffron);box-shadow:0 0 0 3px var(--saffron-lt);}
+  input::placeholder{color:var(--ink-soft);}
   select{font-family:var(--sans);font-size:14px;width:100%;height:42px;border:1px solid var(--border-md);border-radius:var(--radius);background:var(--white);color:var(--ink);padding:0 32px 0 12px;outline:none;transition:border-color 0.15s,box-shadow 0.15s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238A857C' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer;}
   select:focus{border-color:var(--saffron);box-shadow:0 0 0 3px var(--saffron-lt);}
+
+  /* BUTTONS */
+  .btn{font-family:var(--sans);font-size:13px;font-weight:500;border-radius:var(--radius);padding:0 16px;height:42px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;border:none;white-space:nowrap;width:100%;}
+  .btn-primary{background:var(--saffron);color:#fff;}
+  .btn-primary:hover{background:var(--saffron-dk);}
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+  .btn-secondary{background:var(--white);color:var(--ink);border:1px solid var(--border-md);}
+  .btn-secondary:hover{background:var(--parchment-d);}
+  .btn-sm-inline{width:auto;height:36px;font-size:13px;padding:0 14px;}
+
+  /* ERROR / SUCCESS */
+  .error-text{display:none;font-size:13px;color:var(--danger);background:var(--danger-lt);border:1px solid rgba(192,57,43,0.2);border-radius:var(--radius);padding:10px 14px;line-height:1.5;}
+  .divider{border:none;border-top:1px solid var(--border);margin:4px 0;}
+  .forgot-hint{font-size:12px;color:var(--ink-soft);text-align:center;}
 
   /* LOADING */
   .spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--saffron);border-radius:50%;animation:spin 0.8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .loading-text{font-size:14px;color:var(--ink-soft);}
-  .mini-spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--saffron);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;display:inline-block;}
-  #finding-classes{display:none;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);margin-bottom:1rem;}
-
-  /* BUTTONS */
-  .btn{font-family:var(--sans);font-size:13px;font-weight:500;border-radius:var(--radius);padding:0 16px;height:38px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;border:none;white-space:nowrap;}
-  .btn-primary{background:var(--saffron);color:#fff;}
-  .btn-primary:hover{background:var(--saffron-dk);}
-  .btn-primary:disabled{opacity:0.4;cursor:not-allowed;}
-
-  /* ERROR */
-  .error-text{display:none;font-size:13px;color:var(--danger);background:var(--danger-lt);border:1px solid rgba(192,57,43,0.2);border-radius:var(--radius);padding:10px 14px;margin-top:10px;line-height:1.5;max-width:420px;}
-
-  /* CLASS BADGE */
-  #class-badge{display:none;font-size:12px;color:var(--ink-soft);background:var(--parchment-d);border-radius:20px;padding:3px 10px;cursor:pointer;transition:all 0.15s;border:1px solid var(--border);}
-  #class-badge:hover{border-color:var(--saffron);color:var(--saffron);}
+  .mini-spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--saffron);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;flex-shrink:0;}
+  #finding-classes-row{display:none;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);}
 
   /* VERSION TOGGLE */
   #version-toggle-wrap{display:flex;align-items:center;gap:0;background:var(--parchment-d);border-radius:var(--radius-lg);padding:3px;margin-bottom:1.25rem;width:fit-content;}
@@ -128,18 +138,13 @@
   .track-row:hover{background:var(--parchment);}
   .track-row.playing{background:var(--saffron-lt);}
   .track-row.playing::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--saffron);border-radius:0 2px 2px 0;}
-  .track-num{font-size:12px;color:var(--ink-soft);width:20px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;}
+  .track-num{font-size:12px;color:var(--ink-soft);width:20px;text-align:right;flex-shrink:0;}
   .track-row.playing .track-num{color:var(--saffron);}
   .track-play-icon{font-size:11px;color:var(--ink-soft);flex-shrink:0;width:14px;text-align:center;}
   .track-row.playing .track-play-icon,.track-row:hover .track-play-icon{color:var(--saffron);}
   .track-name{font-family:var(--serif);font-size:16px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
 
-  /* NO VERSION STATE */
-  .no-version-state{text-align:center;padding:3rem 1rem;}
-  .no-version-title{font-family:var(--serif);font-size:20px;font-weight:300;font-style:italic;color:var(--ink-mid);margin-bottom:6px;}
-  .no-version-sub{font-size:13px;color:var(--ink-soft);}
-
-  /* EMPTY */
+  /* EMPTY / NO VERSION */
   #empty-state{display:none;text-align:center;padding:3rem 1rem;}
   .empty-title{font-family:var(--serif);font-size:20px;font-weight:300;font-style:italic;color:var(--ink-mid);margin-bottom:6px;}
   .empty-sub{font-size:13px;color:var(--ink-soft);}
@@ -157,7 +162,7 @@
   audio{width:100%;height:28px;display:block;accent-color:var(--saffron);}
 
   @media(max-width:480px){
-    #user-email{display:none!important;}
+    #learner-name-el{display:none!important;}
     .col-name{font-size:16px;}
     .play-all-btn span{display:none;}
     #version-toggle-wrap{width:100%;}
@@ -168,41 +173,59 @@
 <body>
 
 <header id="site-header">
-  <div class="logo">
-    <span class="logo-dot">॰</span>
-    Sama Veda
-  </div>
+  <div class="logo"><span class="logo-dot">॰</span>Sama Veda</div>
   <div id="user-area">
+    <span id="learner-name-el"></span>
     <span id="class-badge" title="Click to switch class"></span>
-    <span id="user-email"></span>
     <button id="logout-btn">Sign out</button>
   </div>
 </header>
 
 <div id="page">
 
-  <!-- Sign-in -->
+  <!-- Step 1: Google sign-in -->
   <div id="signin-view" class="view">
-    <div class="signin-icon">𝄞</div>
-    <div class="signin-title">Your Sama Veda library</div>
-    <p class="signin-sub">Sign in with Google to access your class recordings.</p>
-    <button id="signin-btn">
-      <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
-      Sign in with Google
-    </button>
-    <div class="error-text" id="signin-error"></div>
+    <div class="auth-icon">𝄞</div>
+    <div class="auth-title">Sama Veda</div>
+    <p class="auth-sub">Sign in with the shared Sama Veda learner account to continue.</p>
+    <div class="auth-card">
+      <div class="shared-account-hint">
+        Use the shared account:<br>
+        <strong>sama.learner@gmail.com</strong><br>
+        <span style="font-size:11px;">Not your personal Gmail account.</span>
+      </div>
+      <button class="btn btn-primary" id="signin-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
+        Sign in with Google
+      </button>
+      <div class="error-text" id="signin-error"></div>
+    </div>
   </div>
 
-  <!-- Class select -->
-  <div id="class-select-view" class="view">
-    <div class="signin-icon">📚</div>
-    <div class="class-select-title">Select your class</div>
-    <p class="class-select-sub">You have access to multiple class sheets. Pick the one you'd like to browse.</p>
-    <div class="class-select-card">
-      <div id="finding-classes">
-        <div class="mini-spinner"></div>
-        Finding your classes…
+  <!-- Step 2: UserID only -->
+  <div id="login-view" class="view">
+    <div class="auth-icon">🙏</div>
+    <div class="auth-title">Welcome</div>
+    <p class="auth-sub">Enter your User ID to access your class.</p>
+    <div class="auth-card">
+      <div>
+        <label class="field-label" for="userid-input">User ID</label>
+        <input type="text" id="userid-input" placeholder="Your user ID" autocomplete="username" autocapitalize="none" />
       </div>
+      <button class="btn btn-primary" id="login-btn">Enter →</button>
+      <div class="error-text" id="login-error"></div>
+      <hr class="divider" />
+      <p class="forgot-hint">Don't know your User ID? Contact your teacher.</p>
+    </div>
+  </div>
+
+  <!-- Class select (multi-class, standard flow only) -->
+  <div id="class-select-view" class="view">
+    <div class="auth-icon">📚</div>
+    <div class="auth-title">Select your class</div>
+    <p class="auth-sub">You have access to multiple class sheets.</p>
+    <div class="auth-card">
+      <div id="finding-classes-row"><div class="mini-spinner"></div><span>Finding your classes…</span></div>
       <select id="class-sheet-select" style="display:none;"></select>
       <button class="btn btn-primary" id="class-submit-btn" disabled>Open →</button>
       <div class="error-text" id="class-select-error"></div>
@@ -212,32 +235,27 @@
   <!-- Loading -->
   <div id="loading-view" class="view">
     <div class="spinner"></div>
-    <p class="loading-text" id="loading-text">Loading your collections…</p>
+    <p class="loading-text" id="loading-text">Loading…</p>
   </div>
 
   <!-- Main -->
   <div id="main-view" class="view">
-
-    <!-- Version toggle -->
     <div id="version-toggle-wrap">
       <button class="version-btn" id="btn-learning" data-version="Learning">🎓 Learning mode</button>
       <button class="version-btn" id="btn-final" data-version="Final">✓ Final version</button>
     </div>
-
-    <!-- Search -->
     <div class="search-wrap">
       <span class="search-icon">⌕</span>
       <input type="text" id="search-input" placeholder="Search collections or tracks…" autocomplete="off" />
     </div>
-
     <p class="section-label" id="section-label">Collections</p>
     <div id="collections-list"></div>
     <div id="empty-state">
       <div class="empty-title">No results</div>
       <p class="empty-sub">Try a different search term.</p>
     </div>
-
   </div>
+
 </div>
 
 <!-- Player -->
@@ -258,25 +276,31 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const CLIENT_ID         = '730888202622-b4ttnasrooktvq7gm7rcng6l1tu0gfcu.apps.googleusercontent.com';
-const MASTER_SHEET_ID   = '1sEDcKrc3AEZ8DMJ9HEfi82wRMts2BshFqKzvTw6eB3A';
-const CLASSES_FOLDER_ID = '1joiInIm802VoenMRQwcbN2osPrG_37xu';
+const CLIENT_ID          = '730888202622-b4ttnasrooktvq7gm7rcng6l1tu0gfcu.apps.googleusercontent.com';
+const MASTER_SHEET_ID    = '1sEDcKrc3AEZ8DMJ9HEfi82wRMts2BshFqKzvTw6eB3A';
+const CLASSES_FOLDER_ID  = '1joiInIm802VoenMRQwcbN2osPrG_37xu';
+const SHARED_ACCOUNT     = 'sama.learner@gmail.com';
 const SCOPES = [
   'https://www.googleapis.com/auth/drive.readonly',
   'https://www.googleapis.com/auth/spreadsheets.readonly'
 ].join(' ');
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let accessToken     = null;
-let tokenClient     = null;
-let activeSheetId   = null;
-let activeSheetName = '';
-let allCollections  = []; // all loaded, both versions
-let activeVersion   = 'Learning'; // 'Learning' | 'Final'
-let playQueue       = [];
-let queueIndex      = -1;
-let currentTrackId  = null;
-let availableSheets = [];
+let accessToken      = null;
+let tokenClient      = null;
+let activeSheetId    = null;
+let activeSheetName  = '';
+let allCollections   = [];
+let activeVersion    = 'Learning';
+let playQueue        = [];
+let queueIndex       = -1;
+let currentTrackId   = null;
+let availableSheets  = [];
+
+// Student auth state
+let studentMode      = false; // true when Students tab has rows
+let currentStudent   = null;  // {rowIndex, userId, displayName, classSheetId}
+let allStudents      = [];    // parsed from Students tab
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function esc(s){ const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
@@ -292,12 +316,14 @@ function parseSheet(data){
 
 // ── VIEWS ─────────────────────────────────────────────────────────────────────
 function setView(name){
-  ['signin','class-select','loading','main'].forEach(v=>
-    document.getElementById(v+'-view').classList.toggle('active',v===name)
-  );
+  ['signin','login','class-select','loading','main'].forEach(v=>{
+    const el=document.getElementById(v+'-view');
+    if(el) el.classList.toggle('active',v===name);
+  });
 }
 function setLoading(msg){ document.getElementById('loading-text').textContent=msg||'Loading…'; setView('loading'); }
 function showError(id,msg){ const el=document.getElementById(id); if(!el)return; el.textContent=msg; el.style.display=msg?'block':'none'; }
+function showSuccess(id,msg){ const el=document.getElementById(id); if(!el)return; el.textContent=msg; el.style.display=msg?'block':'none'; }
 
 // ── VERSION TOGGLE ────────────────────────────────────────────────────────────
 function setVersion(v){
@@ -306,7 +332,6 @@ function setVersion(v){
   document.getElementById('btn-final').className='version-btn'+(v==='Final'?' active-final':'');
   renderCollections(document.getElementById('search-input').value);
 }
-
 document.getElementById('btn-learning').addEventListener('click',()=>setVersion('Learning'));
 document.getElementById('btn-final').addEventListener('click',()=>setVersion('Final'));
 
@@ -329,15 +354,8 @@ async function initAuth(){
       callback:async(resp)=>{
         if(resp.error){ showError('signin-error','Sign-in failed: '+resp.error); return; }
         accessToken=resp.access_token;
-        try{
-          const r=await fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?access_token='+accessToken);
-          const d=await r.json();
-          const eEl=document.getElementById('user-email');
-          eEl.textContent=d.email||''; eEl.style.display=d.email?'block':'none';
-          document.getElementById('logout-btn').style.display='block';
-        }catch(_){}
         showError('signin-error','');
-        await resolveClassSheet();
+        await afterGoogleSignIn();
       }
     });
     document.getElementById('signin-btn').addEventListener('click',()=>{
@@ -348,11 +366,11 @@ async function initAuth(){
     document.getElementById('logout-btn').addEventListener('click',()=>{
       if(accessToken) google.accounts.oauth2.revoke(accessToken,()=>{});
       accessToken=null; activeSheetId=null; allCollections=[];
-      playQueue=[]; currentTrackId=null;
+      playQueue=[]; currentTrackId=null; currentStudent=null; studentMode=false;
       document.getElementById('audio-el').src='';
       document.getElementById('player-bar').style.display='none';
-      document.getElementById('user-email').style.display='none';
       document.getElementById('logout-btn').style.display='none';
+      document.getElementById('learner-name-el').style.display='none';
       document.getElementById('class-badge').style.display='none';
       setView('signin');
     });
@@ -362,7 +380,61 @@ async function initAuth(){
   }catch(e){ showError('signin-error',e.message); }
 }
 
-// ── RESOLVE CLASS SHEET ───────────────────────────────────────────────────────
+// ── AFTER GOOGLE SIGN-IN ──────────────────────────────────────────────────────
+async function afterGoogleSignIn(){
+  setLoading('Checking access…');
+  try{
+    // Try to read Students tab from Master Sheet
+    const studentsData=await sheetsFetch(MASTER_SHEET_ID,'Students!A:Z');
+    const st=parseSheet(studentsData);
+
+    if(st.rows.length===0){
+      // No students — fall through to standard flow
+      studentMode=false;
+      allStudents=[];
+      await resolveClassSheet();
+    } else {
+      // Student mode
+      studentMode=true;
+      allStudents=st.rows.map((r,i)=>({
+        rowIndex:i+2,
+        userId:st.get(r,'UserID'),
+        classSheetId:st.get(r,'ClassSheetID'),
+        displayName:st.get(r,'DisplayName')||st.get(r,'UserID')
+      })).filter(s=>s.userId);
+      setView('login');
+      document.getElementById('logout-btn').style.display='block';
+    }
+  }catch(e){
+    // Students tab doesn't exist yet — standard flow
+    studentMode=false;
+    await resolveClassSheet();
+  }
+}
+
+// ── STUDENT LOGIN ─────────────────────────────────────────────────────────────
+document.getElementById('login-btn').addEventListener('click',async()=>{
+  const userId=document.getElementById('userid-input').value.trim();
+  showError('login-error','');
+  if(!userId){ showError('login-error','Please enter your User ID.'); return; }
+  const student=allStudents.find(s=>s.userId.toLowerCase()===userId.toLowerCase());
+  if(!student){ showError('login-error','User ID not found. Check your User ID or contact your teacher.'); return; }
+  currentStudent=student;
+  await loadStudentClass();
+});
+
+document.getElementById('userid-input').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('login-btn').click(); });
+
+// ── LOAD STUDENT CLASS ────────────────────────────────────────────────────────
+async function loadStudentClass(){
+  const nameEl=document.getElementById('learner-name-el');
+  nameEl.textContent=currentStudent.displayName;
+  nameEl.style.display='inline';
+  activeSheetId=currentStudent.classSheetId;
+  await loadData();
+}
+
+// ── STANDARD FLOW (no student mode) ──────────────────────────────────────────
 async function resolveClassSheet(){
   setLoading('Finding your class…');
   try{
@@ -386,28 +458,24 @@ async function resolveClassSheet(){
 
 async function findAccessibleClassSheets(){
   const directQ=`'${CLASSES_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
-  const directRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(directQ)}&fields=files(id,name,capabilities)&pageSize=100`);
+  const directRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(directQ)}&fields=files(id,name)&pageSize=100`);
   let allFiles=[...(directRes.files||[])];
   const folderQ=`'${CLASSES_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
   const folderRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(folderQ)}&fields=files(id,name)&pageSize=100`);
   await Promise.all((folderRes.files||[]).map(async folder=>{
     const subQ=`'${folder.id}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
-    const subRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(subQ)}&fields=files(id,name,capabilities)&pageSize=100`);
+    const subRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(subQ)}&fields=files(id,name)&pageSize=100`);
     allFiles=[...allFiles,...(subRes.files||[])];
   }));
   const seen=new Set();
-  return allFiles
-    .filter(f=>{ if(seen.has(f.id)) return false; seen.add(f.id); return true; })
-    .sort((a,b)=>a.name.localeCompare(b.name))
-    .map(f=>({id:f.id,name:f.name}));
+  return allFiles.filter(f=>{ if(seen.has(f.id)) return false; seen.add(f.id); return true; }).sort((a,b)=>a.name.localeCompare(b.name)).map(f=>({id:f.id,name:f.name}));
 }
 
 function showClassSelector(){
   setView('class-select');
-  const findingEl=document.getElementById('finding-classes');
   const sel=document.getElementById('class-sheet-select');
   const submitBtn=document.getElementById('class-submit-btn');
-  findingEl.style.display='none';
+  document.getElementById('finding-classes-row').style.display='none';
   sel.innerHTML='<option value="">— Select a class —</option>';
   availableSheets.forEach(s=>{ const o=document.createElement('option'); o.value=s.id; o.textContent=s.name; sel.appendChild(o); });
   if(activeSheetId){ sel.value=activeSheetId; submitBtn.disabled=false; }
@@ -421,18 +489,14 @@ document.getElementById('class-submit-btn').addEventListener('click',async()=>{
   if(!sel.value) return;
   const chosen=availableSheets.find(s=>s.id===sel.value);
   activeSheetId=chosen.id; activeSheetName=chosen.name;
-  updateClassBadge();
-  await loadData();
+  updateClassBadge(); await loadData();
 });
 
 function updateClassBadge(){
   const badge=document.getElementById('class-badge');
   if(activeSheetName&&availableSheets.length>1){
-    badge.textContent=activeSheetName+(availableSheets.length>1?' ▾':'');
-    badge.style.display='inline-flex';
-  } else {
-    badge.style.display='none';
-  }
+    badge.textContent=activeSheetName+' ▾'; badge.style.display='inline-flex';
+  } else { badge.style.display='none'; }
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -442,8 +506,11 @@ async function driveFetch(url){
   return res.json();
 }
 async function sheetsFetch(id,range){
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}`;
-  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}?_=${Date.now()}`;
+  const res=await fetch(url,{
+    headers:{Authorization:'Bearer '+accessToken},
+    cache:'no-store'
+  });
   if(!res.ok) throw new Error('Sheets '+res.status+': '+(await res.text()).slice(0,200));
   return res.json();
 }
@@ -452,52 +519,44 @@ async function sheetsFetch(id,range){
 async function loadData(){
   setLoading('Loading your collections…');
   try{
+    console.log('Fetching from sheet:', activeSheetId);
     const [colsData,tracksData]=await Promise.all([
       sheetsFetch(activeSheetId,'Collections!A:Z'),
       sheetsFetch(activeSheetId,'Tracks!A:Z')
     ]);
-
-    const cols=parseSheet(colsData);
-    const trks=parseSheet(tracksData);
-
-    // Build collections map — keyed by colId
+    console.log('Raw Collections API response:', JSON.stringify(colsData).slice(0,500));
+    console.log('Raw Tracks API response (first 200):', JSON.stringify(tracksData).slice(0,200));
+    const cols=parseSheet(colsData); const trks=parseSheet(tracksData);
     const colMap={};
     cols.rows.forEach(r=>{
-      const id=cols.get(r,'CollectionID');
-      if(!id) return;
-      // Version column — normalize to 'Learning' or 'Final', default to 'Final' if absent
+      const id=cols.get(r,'CollectionID'); if(!id) return;
       const rawVersion=cols.get(r,'Version');
       const version=rawVersion.toLowerCase().includes('learn')?'Learning':'Final';
       colMap[id]={id,name:cols.get(r,'CollectionName')||id,version,tracks:[],expanded:false};
     });
-
-    // Attach tracks
     trks.rows.forEach(r=>{
-      const colId=trks.get(r,'CollectionID');
-      const fileId=trks.get(r,'DriveFileID');
+      const colId=trks.get(r,'CollectionID'); const fileId=trks.get(r,'DriveFileID');
       if(!colId||!fileId||!colMap[colId]) return;
-      colMap[colId].tracks.push({
-        id:trks.get(r,'TrackID')||fileId,
-        name:trks.get(r,'TrackName')||'(unnamed)',
-        fileId,
-        order:parseInt(trks.get(r,'TrackOrder'))||999
-      });
+      colMap[colId].tracks.push({id:trks.get(r,'TrackID')||fileId,name:trks.get(r,'TrackName')||'(unnamed)',fileId,order:parseInt(trks.get(r,'TrackOrder'))||999});
     });
-
     Object.values(colMap).forEach(c=>c.tracks.sort((a,b)=>a.order-b.order));
     allCollections=Object.values(colMap).filter(c=>c.tracks.length>0);
 
-    // Check if we have version data — if no Version column at all, show all
+    // ── DEBUG (remove after diagnosis) ──
+    console.log('=== COLLECTION DEBUG ===');
+    console.log('Total collections with tracks:', allCollections.length);
+    allCollections.forEach(c=>console.log(` ${c.name} | version="${c.version}" | tracks=${c.tracks.length}`));
+    const noTracks=Object.values(colMap).filter(c=>c.tracks.length===0);
+    if(noTracks.length) console.log('Collections with NO tracks (hidden):', noTracks.map(c=>c.name+' (version='+c.version+')'));
+    console.log('Raw Collections tab rows:', cols.rows.length);
+    console.log('Raw Tracks tab rows:', trks.rows.length);
+    // ── END DEBUG ──
+
     const hasVersionData=allCollections.some(c=>c.version);
-
-    setView('main');
-
-    // Show/hide toggle based on whether version data exists
-    const toggleWrap=document.getElementById('version-toggle-wrap');
-    toggleWrap.style.display=hasVersionData?'flex':'none';
-
-    // Default to Learning; fall back to Final if no Learning collections exist
+    document.getElementById('version-toggle-wrap').style.display=hasVersionData?'flex':'none';
     const hasLearning=allCollections.some(c=>c.version==='Learning');
+    setView('main');
+    document.getElementById('logout-btn').style.display='block';
     setVersion(hasLearning?'Learning':'Final');
   }catch(e){
     setView('signin');
@@ -507,45 +566,30 @@ async function loadData(){
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 const ICONS=['📿','🪘','🎵','🕉️','🎶','🪗','🎼','🔔'];
-
 function renderCollections(filterText){
   const q=(filterText||'').trim().toLowerCase();
   const container=document.getElementById('collections-list');
   const emptyState=document.getElementById('empty-state');
   const sectionLabel=document.getElementById('section-label');
   container.innerHTML='';
-
-  // Filter by active version first, then by search
   const versionFiltered=allCollections.filter(c=>c.version===activeVersion);
-  let anyVisible=false;
-  let visibleCount=0;
-
-  // If no collections exist for this version at all
+  let anyVisible=false; let visibleCount=0;
   if(versionFiltered.length===0){
-    container.innerHTML=`<div class="no-version-state">
-      <div class="no-version-title">No ${activeVersion.toLowerCase()} collections yet</div>
-      <p class="no-version-sub">Ask your class admin to add ${activeVersion.toLowerCase()} mode tracks.</p>
-    </div>`;
+    container.innerHTML=`<div style="text-align:center;padding:3rem 1rem;"><div style="font-family:var(--serif);font-size:20px;font-style:italic;color:var(--ink-mid);margin-bottom:6px;">No ${activeVersion.toLowerCase()} collections yet</div><p style="font-size:13px;color:var(--ink-soft);">Ask your class admin to add ${activeVersion.toLowerCase()} mode tracks.</p></div>`;
     emptyState.style.display='none';
     sectionLabel.textContent=activeVersion+' mode';
     return;
   }
-
   versionFiltered.forEach((col,ci)=>{
     const colMatches=col.name.toLowerCase().includes(q);
     const matchTracks=col.tracks.filter(t=>t.name.toLowerCase().includes(q));
     const hasMatch=!q||colMatches||matchTracks.length>0;
     if(!hasMatch) return;
     anyVisible=true; visibleCount++;
-
     const shouldExpand=q?true:col.expanded;
     const tracksToShow=(q&&!colMatches)?matchTracks:col.tracks;
-
-    const card=document.createElement('div');
-    card.className='col-card';
-
-    const header=document.createElement('div');
-    header.className='col-header';
+    const card=document.createElement('div'); card.className='col-card';
+    const header=document.createElement('div'); header.className='col-header';
     const iconClass=activeVersion==='Learning'?'learning':'final';
     const iconEmoji=activeVersion==='Learning'?'🎓':'✓';
     header.innerHTML=`
@@ -557,15 +601,12 @@ function renderCollections(filterText){
       <div class="col-actions">
         <button class="play-all-btn" ${col.tracks.length===0?'disabled':''}>▶ <span>Play all</span></button>
         <span class="chevron ${shouldExpand?'open':''}">▶</span>
-      </div>
-    `;
+      </div>`;
     header.querySelector('.play-all-btn').addEventListener('click',e=>{ e.stopPropagation(); startQueue(col,col.tracks,0); });
     header.addEventListener('click',()=>{ col.expanded=!shouldExpand; renderCollections(document.getElementById('search-input').value); });
     card.appendChild(header);
-
     if(shouldExpand){
-      const tList=document.createElement('div');
-      tList.className='track-list';
+      const tList=document.createElement('div'); tList.className='track-list';
       if(tracksToShow.length===0){
         tList.innerHTML='<div style="padding:12px 16px;font-size:13px;color:var(--ink-soft);">No tracks</div>';
       } else {
@@ -573,11 +614,7 @@ function renderCollections(filterText){
           const isPlaying=track.id===currentTrackId;
           const row=document.createElement('div');
           row.className='track-row'+(isPlaying?' playing':'');
-          row.innerHTML=`
-            <span class="track-num">${track.order}</span>
-            <span class="track-play-icon">${isPlaying?'♪':'▶'}</span>
-            <span class="track-name">${esc(track.name)}</span>
-          `;
+          row.innerHTML=`<span class="track-num">${track.order}</span><span class="track-play-icon">${isPlaying?'♪':'▶'}</span><span class="track-name">${esc(track.name)}</span>`;
           row.addEventListener('click',()=>startQueue(col,[track],0));
           tList.appendChild(row);
         });
@@ -586,22 +623,18 @@ function renderCollections(filterText){
     }
     container.appendChild(card);
   });
-
   emptyState.style.display=anyVisible?'none':'block';
-  sectionLabel.textContent=q
-    ?`Results for "${filterText}"`
-    :`${visibleCount} ${activeVersion} collection${visibleCount===1?'':'s'}`;
+  sectionLabel.textContent=q?`Results for "${filterText}"`:
+    `${visibleCount} ${activeVersion} collection${visibleCount===1?'':'s'}`;
 }
 
 // ── PLAYBACK ──────────────────────────────────────────────────────────────────
 const audioEl=document.getElementById('audio-el');
 function startQueue(col,tracks,startIdx){
-  playQueue=tracks.map(t=>({...t,collectionName:col.name}));
-  queueIndex=startIdx; playItem();
+  playQueue=tracks.map(t=>({...t,collectionName:col.name})); queueIndex=startIdx; playItem();
 }
 function playItem(){
-  const item=playQueue[queueIndex];
-  if(!item) return;
+  const item=playQueue[queueIndex]; if(!item) return;
   currentTrackId=item.id;
   fetch(`https://www.googleapis.com/drive/v3/files/${item.fileId}?alt=media`,{headers:{Authorization:'Bearer '+accessToken}})
     .then(res=>{ if(!res.ok) throw new Error('Drive '+res.status); return res.blob(); })
