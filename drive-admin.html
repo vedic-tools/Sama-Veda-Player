@@ -971,9 +971,7 @@ async function syncCollection(col, ci){
     const renamedTracks=col.tracks.filter(t=>t.status==='renamed'||pendingNameEdits['track_'+t.fileId]);
 
     // Add new tracks in batch
-    console.log(`  Writing collection row: colId=${colId}, name=${col.displayName}, version=${col.version||''}`);
     if(newTracks.length>0){
-      console.log(`  Writing ${newTracks.length} new tracks...`);
       const rows=newTracks.map((t,i)=>{
         const trackId=makeId('T');
         const name=pendingNameEdits['track_'+t.fileId]||t.displayName;
@@ -1017,8 +1015,6 @@ async function syncAll(){
     const newTracks=diffData.flatMap(c=>c.tracks.filter(t=>t.status==='new').map(t=>({...t,parentCol:c})));
     const renamedTracks=diffData.flatMap(c=>c.tracks.filter(t=>t.status==='renamed'||pendingNameEdits['track_'+t.fileId]).map(t=>({...t,parentCol:c})));
 
-    console.log(`Syncing: ${newCols.length} new collections, ${renamedCols.length} renamed, ${newTracks.length} new tracks, ${renamedTracks.length} renamed tracks`);
-
     // 1. Batch append all new collection rows in ONE call
     if(newCols.length>0){
       const colRows=newCols.map(col=>{
@@ -1028,9 +1024,7 @@ async function syncAll(){
         delete pendingNameEdits['col_'+col.folderId];
         return [colId,name,col.folderId,col.version||''];
       });
-      console.log('Appending collection rows:', colRows.length);
       await sheetsAppend('Collections!A:D',colRows);
-      console.log('Collections appended successfully');
     }
 
     // 2. Handle renamed collections one by one (rare operation)
@@ -1056,9 +1050,7 @@ async function syncAll(){
         delete pendingNameEdits['track_'+t.fileId];
         return [trackId,colId,name,t.fileId,t.order];
       });
-      console.log('Appending track rows:', trackRows.length);
       await sheetsAppend('Tracks!A:E',trackRows);
-      console.log('Tracks appended successfully');
     }
 
     // 4. Handle renamed tracks one by one (rare)

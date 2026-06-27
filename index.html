@@ -436,6 +436,15 @@ async function loadStudentClass(){
 
 // ── STANDARD FLOW (no student mode) ──────────────────────────────────────────
 async function resolveClassSheet(){
+  // Option C: ?sheet=ID in URL bypasses class discovery entirely
+  const urlSheetId=new URLSearchParams(window.location.search).get('sheet');
+  if(urlSheetId){
+    activeSheetId=urlSheetId;
+    activeSheetName=urlSheetId===MASTER_SHEET_ID?'Master Sheet':'';
+    await loadData();
+    return;
+  }
+
   setLoading('Finding your class…');
   try{
     const sheets=await findAccessibleClassSheets();
@@ -519,13 +528,10 @@ async function sheetsFetch(id,range){
 async function loadData(){
   setLoading('Loading your collections…');
   try{
-    console.log('Fetching from sheet:', activeSheetId);
     const [colsData,tracksData]=await Promise.all([
       sheetsFetch(activeSheetId,'Collections!A:Z'),
       sheetsFetch(activeSheetId,'Tracks!A:Z')
     ]);
-    console.log('Raw Collections API response:', JSON.stringify(colsData).slice(0,500));
-    console.log('Raw Tracks API response (first 200):', JSON.stringify(tracksData).slice(0,200));
     const cols=parseSheet(colsData); const trks=parseSheet(tracksData);
     const colMap={};
     cols.rows.forEach(r=>{
@@ -541,16 +547,6 @@ async function loadData(){
     });
     Object.values(colMap).forEach(c=>c.tracks.sort((a,b)=>a.order-b.order));
     allCollections=Object.values(colMap).filter(c=>c.tracks.length>0);
-
-    // ── DEBUG (remove after diagnosis) ──
-    console.log('=== COLLECTION DEBUG ===');
-    console.log('Total collections with tracks:', allCollections.length);
-    allCollections.forEach(c=>console.log(` ${c.name} | version="${c.version}" | tracks=${c.tracks.length}`));
-    const noTracks=Object.values(colMap).filter(c=>c.tracks.length===0);
-    if(noTracks.length) console.log('Collections with NO tracks (hidden):', noTracks.map(c=>c.name+' (version='+c.version+')'));
-    console.log('Raw Collections tab rows:', cols.rows.length);
-    console.log('Raw Tracks tab rows:', trks.rows.length);
-    // ── END DEBUG ──
 
     const hasVersionData=allCollections.some(c=>c.version);
     document.getElementById('version-toggle-wrap').style.display=hasVersionData?'flex':'none';
