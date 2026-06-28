@@ -187,12 +187,13 @@
   <div id="signin-view" class="view">
     <div class="auth-icon">𝄞</div>
     <div class="auth-title">Sama Veda</div>
-    <p class="auth-sub">Sign in with the shared Sama Veda learner account to continue.</p>
+    <p class="auth-sub">Sign in with Google to access your class recordings.</p>
     <div class="auth-card">
       <div class="shared-account-hint">
-        Use the shared account:<br>
+        You can sign in with your <strong>personal Google account</strong> if you are comfortable doing so.<br><br>
+        Alternatively, use the shared class account:<br>
         <strong>sama.learner@gmail.com</strong><br>
-        <span style="font-size:11px;">Not your personal Gmail account.</span>
+        <span style="font-size:11px;">If you use the shared account, you will be asked to select your User ID on the next screen.</span>
       </div>
       <button class="btn btn-primary" id="signin-btn">
         <svg width="15" height="15" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
@@ -206,7 +207,7 @@
   <div id="login-view" class="view">
     <div class="auth-icon">🙏</div>
     <div class="auth-title">Welcome</div>
-    <p class="auth-sub">Enter your User ID to access your class.</p>
+    <p class="auth-sub">You are signed in with the shared class account. Please select your User ID to load your class.</p>
     <div class="auth-card">
       <div>
         <label class="field-label" for="userid-input">User ID</label>
@@ -215,7 +216,7 @@
       <button class="btn btn-primary" id="login-btn">Enter →</button>
       <div class="error-text" id="login-error"></div>
       <hr class="divider" />
-      <p class="forgot-hint">Don't know your User ID? Contact your teacher.</p>
+      <p class="forgot-hint">Don't know your User ID or having trouble? Contact your class admin.</p>
     </div>
   </div>
 
@@ -282,7 +283,9 @@ const CLASSES_FOLDER_ID  = '1joiInIm802VoenMRQwcbN2osPrG_37xu';
 const SHARED_ACCOUNT     = 'sama.learner@gmail.com';
 const SCOPES = [
   'https://www.googleapis.com/auth/drive.readonly',
-  'https://www.googleapis.com/auth/spreadsheets.readonly'
+  'https://www.googleapis.com/auth/spreadsheets.readonly',
+  'email',
+  'profile'
 ].join(' ');
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -355,6 +358,13 @@ async function initAuth(){
         if(resp.error){ showError('signin-error','Sign-in failed: '+resp.error); return; }
         accessToken=resp.access_token;
         showError('signin-error','');
+        // Decode email from id_token if present, else fetch via userinfo
+        try{
+          if(resp.id_token){
+            const payload=JSON.parse(atob(resp.id_token.split('.')[1]));
+            window._signedInEmail=(payload.email||'').toLowerCase();
+          }
+        }catch(_){}
         await afterGoogleSignIn();
       }
     });
@@ -384,17 +394,24 @@ async function initAuth(){
 async function afterGoogleSignIn(){
   setLoading('Checking access…');
   try{
-    // Get signed-in email
-    let signedInEmail='';
-    try{
-      const r=await fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?access_token='+accessToken);
-      const d=await r.json();
-      signedInEmail=(d.email||'').toLowerCase();
-      const eEl=document.getElementById('user-email');
-      eEl.textContent=d.email||''; eEl.style.display=d.email?'block':'none';
-      document.getElementById('logout-btn').style.display='block';
-    }catch(_){}
+    // Get signed-in email — try id_token first, then userinfo endpoint
+    let signedInEmail=window._signedInEmail||'';
+    if(!signedInEmail){
+      try{
+        const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{
+          headers:{Authorization:'Bearer '+accessToken}
+        });
+        const d=await r.json();
+        signedInEmail=(d.email||'').toLowerCase();
+      }catch(_){}
+    }
+    // Show email in header if element exists
+    const eEl=document.getElementById('user-email');
+    if(eEl){ eEl.textContent=signedInEmail; eEl.style.display=signedInEmail?'block':'none'; }
+    const logoutEl=document.getElementById('logout-btn');
+    if(logoutEl) logoutEl.style.display='block';
 
+    console.log('Signed-in email:', signedInEmail, '| Shared account:', SHARED_ACCOUNT.toLowerCase(), '| Match:', signedInEmail===SHARED_ACCOUNT.toLowerCase());
     // Only activate student mode if signed in as the shared learner account
     if(signedInEmail===SHARED_ACCOUNT.toLowerCase()){
       // Try to read Students tab
