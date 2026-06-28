@@ -189,7 +189,7 @@
 <header id="site-header">
   <div class="logo">
     <span class="logo-dot">॰</span>
-    Sama Veda
+    <span id="app-name-drive">Sama Veda</span>
     <span class="logo-sub">Drive Admin</span>
   </div>
   <div id="user-area">
@@ -312,13 +312,14 @@
 
 <div id="toast"></div>
 
+<script src="config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const CLIENT_ID            = '730888202622-b4ttnasrooktvq7gm7rcng6l1tu0gfcu.apps.googleusercontent.com';
-const MASTER_SHEET_ID      = '1sEDcKrc3AEZ8DMJ9HEfi82wRMts2BshFqKzvTw6eB3A';
-const CLASSES_FOLDER_ID    = '1joiInIm802VoenMRQwcbN2osPrG_37xu';
-const COLLECTIONS_FOLDER_ID= '1Kt12pfzlHTFR5i9O_tI8rOQy-D9-8_LD';
+const CLIENT_ID            = APP_CONFIG.CLIENT_ID;
+const MASTER_SHEET_ID      = APP_CONFIG.MASTER_SHEET_ID;
+const CLASSES_FOLDER_ID    = APP_CONFIG.CLASSES_FOLDER_ID;
+const COLLECTIONS_FOLDER_ID= APP_CONFIG.COLLECTIONS_FOLDER_ID;
 const SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
   'https://www.googleapis.com/auth/drive.readonly'
@@ -540,12 +541,12 @@ async function loadAll(){
     const topQ=`'${COLLECTIONS_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
     const topRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(topQ)}&fields=files(id,name)&orderBy=name&pageSize=200`);
     const topFolders=topRes.files||[];
-    const VERSION_NAMES=['learning','final'];
+    const VERSION_NAMES=[APP_CONFIG.VERSION_LEARNING.toLowerCase(),APP_CONFIG.VERSION_FINAL.toLowerCase()];
     const versionFolders=topFolders.filter(f=>VERSION_NAMES.includes(f.name.toLowerCase()));
     const directColFolders=topFolders.filter(f=>!VERSION_NAMES.includes(f.name.toLowerCase()));
     driveFolders=[];
     await Promise.all(versionFolders.map(async vf=>{
-      const version=vf.name.toLowerCase()==='learning'?'Learning':'Final';
+      const version=vf.name.toLowerCase()===APP_CONFIG.VERSION_LEARNING.toLowerCase()?APP_CONFIG.VERSION_LEARNING:APP_CONFIG.VERSION_FINAL;
       const subQ=`'${vf.id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
       const subRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(subQ)}&fields=files(id,name)&orderBy=name&pageSize=200`);
       (subRes.files||[]).forEach(f=>driveFolders.push({...f,version,versionFolderId:vf.id}));
@@ -834,7 +835,7 @@ function renderCollections(){
 
     const actions=document.createElement('div');
     actions.className='panel-actions';
-    const vBadge=col.version?`<span class="badge" style="background:${'Learning'===col.version?'var(--info-lt)':'var(--success-lt)'};color:${'Learning'===col.version?'var(--info)':'var(--success)'};">${col.version==='Learning'?'🎓 Learning':'✓ Final'}</span>`:'';
+    const vBadge=col.version?`<span class="badge" style="background:${APP_CONFIG.VERSION_LEARNING===col.version?'var(--info-lt)':'var(--success-lt)'};color:${APP_CONFIG.VERSION_LEARNING===col.version?'var(--info)':'var(--success)'};">${col.version===APP_CONFIG.VERSION_LEARNING?APP_CONFIG.VERSION_LEARNING_LABEL:APP_CONFIG.VERSION_FINAL_LABEL}</span>`:'';
     actions.innerHTML=vBadge+statusBadge(col.status);
 
     if(col.status!=='missing'){
@@ -1296,6 +1297,11 @@ document.getElementById('sync-all-btn').addEventListener('click',syncAll);
 document.getElementById('refresh-btn').addEventListener('click',loadAll);
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
+// Set app name from config
+document.title=APP_CONFIG.APP_NAME+' — Drive Admin';
+const dnEl=document.getElementById('app-name-drive');
+if(dnEl) dnEl.textContent=APP_CONFIG.APP_NAME;
+
 (async function boot(){
   setView('signin');
   await initAuth();

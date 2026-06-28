@@ -194,7 +194,7 @@
 <header id="site-header">
   <div class="logo">
     <span class="logo-dot">॰</span>
-    Sama Veda
+    <span id="app-name-admin">Sama Veda</span>
     <span class="logo-sub">Class Admin</span>
   </div>
   <div id="user-area">
@@ -306,12 +306,13 @@
 
 <div id="toast"></div>
 
+<script src="config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────────────
-const CLIENT_ID         = '730888202622-b4ttnasrooktvq7gm7rcng6l1tu0gfcu.apps.googleusercontent.com';
-const MASTER_SHEET_ID   = '1sEDcKrc3AEZ8DMJ9HEfi82wRMts2BshFqKzvTw6eB3A';
-const CLASSES_FOLDER_ID = '1joiInIm802VoenMRQwcbN2osPrG_37xu';
+// ── CONFIG (loaded from config.js) ───────────────────────────────────────────
+const CLIENT_ID         = APP_CONFIG.CLIENT_ID;
+const MASTER_SHEET_ID   = APP_CONFIG.MASTER_SHEET_ID;
+const CLASSES_FOLDER_ID = APP_CONFIG.CLASSES_FOLDER_ID;
 const SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
   'https://www.googleapis.com/auth/drive'  // full drive needed for permissions.list + create
@@ -751,7 +752,7 @@ function renderAll(){ renderCollectionDropdown(); renderClassCollections(); }
 
 function versionBadge(version){
   if(!version) return '';
-  const isLearning=version.toLowerCase().includes('learn');
+  const isLearning=version.toLowerCase()===APP_CONFIG.VERSION_LEARNING.toLowerCase();
   return `<span class="ver-badge ${isLearning?'ver-badge-learning':'ver-badge-final'}">${isLearning?'🎓 Learning':'✓ Final'}</span>`;
 }
 
@@ -769,10 +770,10 @@ function renderCollectionDropdown(){
   if(hasVersions){
     const groups={'Learning':[],'Final':[],'Other':[]};
     available.forEach(c=>{
-      const v=c.version.toLowerCase().includes('learn')?'Learning':c.version.toLowerCase().includes('final')?'Final':'Other';
+      const v=c.version.toLowerCase()===APP_CONFIG.VERSION_LEARNING.toLowerCase()?APP_CONFIG.VERSION_LEARNING:c.version.toLowerCase()===APP_CONFIG.VERSION_FINAL.toLowerCase()?APP_CONFIG.VERSION_FINAL:'Other';
       groups[v].push(c);
     });
-    [['Learning','🎓 Learning mode'],['Final','✓ Final version'],['Other','Other']].forEach(([key,label])=>{
+    [[APP_CONFIG.VERSION_LEARNING,APP_CONFIG.VERSION_LEARNING_LABEL],[APP_CONFIG.VERSION_FINAL,APP_CONFIG.VERSION_FINAL_LABEL],['Other','Other']].forEach(([key,label])=>{
       if(!groups[key].length) return;
       const og=document.createElement('optgroup'); og.label=label;
       groups[key].forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; og.appendChild(o); });
@@ -958,6 +959,11 @@ document.getElementById('change-class-btn').addEventListener('click',async()=>{
 });
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
+// Set app name from config
+document.title=APP_CONFIG.APP_NAME+' — Class Admin';
+const anEl=document.getElementById('app-name-admin');
+if(anEl) anEl.textContent=APP_CONFIG.APP_NAME;
+
 (async function boot(){
   const cls=new URLSearchParams(window.location.search).get('class');
   if(cls) classSheetId=cls;

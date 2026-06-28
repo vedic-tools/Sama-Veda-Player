@@ -191,7 +191,7 @@
 <body>
 
 <header id="site-header">
-  <div class="logo"><span class="logo-dot">॰</span>Sama Veda</div>
+  <div class="logo"><span class="logo-dot">॰</span><span id="app-name-header">Sama Veda</span></div>
   <div id="user-area">
     <span id="learner-name-el"></span>
     <span id="class-badge" title="Click to switch class"></span>
@@ -292,14 +292,15 @@
   </div>
 </div>
 
+<script src="config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────────────
-const CLIENT_ID          = '730888202622-b4ttnasrooktvq7gm7rcng6l1tu0gfcu.apps.googleusercontent.com';
-const MASTER_SHEET_ID    = '1sEDcKrc3AEZ8DMJ9HEfi82wRMts2BshFqKzvTw6eB3A';
-const CLASSES_FOLDER_ID  = '1joiInIm802VoenMRQwcbN2osPrG_37xu';
-const DOCS_FOLDER_ID     = '1UnNpCweEYMj73ANg32E54iDoQzdTPBzF';
-const SHARED_ACCOUNT     = 'sama.learner@gmail.com';
+// ── CONFIG (loaded from config.js) ───────────────────────────────────────────
+const CLIENT_ID          = APP_CONFIG.CLIENT_ID;
+const MASTER_SHEET_ID    = APP_CONFIG.MASTER_SHEET_ID;
+const CLASSES_FOLDER_ID  = APP_CONFIG.CLASSES_FOLDER_ID;
+const DOCS_FOLDER_ID     = APP_CONFIG.DOCS_FOLDER_ID;
+const SHARED_ACCOUNT     = APP_CONFIG.SHARED_LEARNER_ACCOUNT;
 const SCOPES = [
   'https://www.googleapis.com/auth/drive.readonly',
   'https://www.googleapis.com/auth/spreadsheets.readonly',
@@ -353,12 +354,15 @@ function showSuccess(id,msg){ const el=document.getElementById(id); if(!el)retur
 // ── VERSION TOGGLE ────────────────────────────────────────────────────────────
 function setVersion(v){
   activeVersion=v;
-  document.getElementById('btn-learning').className='version-btn'+(v==='Learning'?' active-learning':'');
-  document.getElementById('btn-final').className='version-btn'+(v==='Final'?' active-final':'');
+  document.getElementById('btn-learning').className='version-btn'+(v===APP_CONFIG.VERSION_LEARNING?' active-learning':'');
+  document.getElementById('btn-final').className='version-btn'+(v===APP_CONFIG.VERSION_FINAL?' active-final':'');
   renderCollections(document.getElementById('search-input').value);
 }
-document.getElementById('btn-learning').addEventListener('click',()=>setVersion('Learning'));
-document.getElementById('btn-final').addEventListener('click',()=>setVersion('Final'));
+// Set toggle button labels from config
+document.getElementById('btn-learning').textContent=APP_CONFIG.VERSION_LEARNING_LABEL;
+document.getElementById('btn-final').textContent=APP_CONFIG.VERSION_FINAL_LABEL;
+document.getElementById('btn-learning').addEventListener('click',()=>setVersion(APP_CONFIG.VERSION_LEARNING));
+document.getElementById('btn-final').addEventListener('click',()=>setVersion(APP_CONFIG.VERSION_FINAL));
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
 function waitForGoogle(){
@@ -616,7 +620,7 @@ async function loadData(){
     cols.rows.forEach(r=>{
       const id=cols.get(r,'CollectionID'); if(!id) return;
       const rawVersion=cols.get(r,'Version');
-      const version=rawVersion.toLowerCase().includes('learn')?'Learning':'Final';
+      const version=rawVersion.toLowerCase()===APP_CONFIG.VERSION_LEARNING.toLowerCase()?APP_CONFIG.VERSION_LEARNING:APP_CONFIG.VERSION_FINAL;
       colMap[id]={id,name:cols.get(r,'CollectionName')||id,version,tracks:[],expanded:false};
     });
     trks.rows.forEach(r=>{
@@ -629,10 +633,10 @@ async function loadData(){
 
     const hasVersionData=allCollections.some(c=>c.version);
     document.getElementById('version-toggle-wrap').style.display=hasVersionData?'flex':'none';
-    const hasLearning=allCollections.some(c=>c.version==='Learning');
+    const hasLearning=allCollections.some(c=>c.version===APP_CONFIG.VERSION_LEARNING);
     setView('main');
     document.getElementById('logout-btn').style.display='block';
-    setVersion(hasLearning?'Learning':'Final');
+    setVersion(hasLearning?APP_CONFIG.VERSION_LEARNING:APP_CONFIG.VERSION_FINAL);
   }catch(e){
     setView('signin');
     showError('signin-error','Could not load data: '+e.message);
@@ -704,7 +708,7 @@ function renderCollections(filterText){
   const emptyState=document.getElementById('empty-state');
   const sectionLabel=document.getElementById('section-label');
   container.innerHTML='';
-  const versionFiltered=allCollections.filter(c=>c.version===activeVersion);
+  const versionFiltered=allCollections.filter(c=>c.version===activeVersion); // activeVersion is set from APP_CONFIG.VERSION_LEARNING/FINAL
   let anyVisible=false; let visibleCount=0;
   if(versionFiltered.length===0){
     container.innerHTML=`<div style="text-align:center;padding:3rem 1rem;"><div style="font-family:var(--serif);font-size:20px;font-style:italic;color:var(--ink-mid);margin-bottom:6px;">No ${activeVersion.toLowerCase()} collections yet</div><p style="font-size:13px;color:var(--ink-soft);">Ask your class admin to add ${activeVersion.toLowerCase()} mode tracks.</p></div>`;
@@ -853,6 +857,17 @@ audioEl.addEventListener('ended',()=>{ if(queueIndex<playQueue.length-1){ queueI
 document.getElementById('search-input').addEventListener('input',e=>renderCollections(e.target.value));
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
+// Set app name from config
+document.title=APP_CONFIG.APP_NAME;
+const nameEl=document.getElementById('app-name-header');
+if(nameEl) nameEl.textContent=APP_CONFIG.APP_NAME;
+// Update sign-in screen title
+const titleEl=document.querySelector('.auth-title');
+if(titleEl) titleEl.textContent=APP_CONFIG.APP_NAME;
+// Update shared account hint
+const hintEl=document.querySelector('.shared-account-hint strong');
+if(hintEl&&APP_CONFIG.SHARED_LEARNER_ACCOUNT) hintEl.textContent=APP_CONFIG.SHARED_LEARNER_ACCOUNT;
+
 (async function boot(){ setView('signin'); await initAuth(); })();
 </script>
 </body>
