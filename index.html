@@ -384,29 +384,45 @@ async function initAuth(){
 async function afterGoogleSignIn(){
   setLoading('Checking access…');
   try{
-    // Try to read Students tab from Master Sheet
-    const studentsData=await sheetsFetch(MASTER_SHEET_ID,'Students!A:Z');
-    const st=parseSheet(studentsData);
+    // Get signed-in email
+    let signedInEmail='';
+    try{
+      const r=await fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?access_token='+accessToken);
+      const d=await r.json();
+      signedInEmail=(d.email||'').toLowerCase();
+      const eEl=document.getElementById('user-email');
+      eEl.textContent=d.email||''; eEl.style.display=d.email?'block':'none';
+      document.getElementById('logout-btn').style.display='block';
+    }catch(_){}
 
-    if(st.rows.length===0){
-      // No students — fall through to standard flow
+    // Only activate student mode if signed in as the shared learner account
+    if(signedInEmail===SHARED_ACCOUNT.toLowerCase()){
+      // Try to read Students tab
+      try{
+        const studentsData=await sheetsFetch(MASTER_SHEET_ID,'Students!A:Z');
+        const st=parseSheet(studentsData);
+        if(st.rows.length>0){
+          studentMode=true;
+          allStudents=st.rows.map((r,i)=>({
+            rowIndex:i+2,
+            userId:st.get(r,'UserID'),
+            classSheetId:st.get(r,'ClassSheetID'),
+            displayName:st.get(r,'DisplayName')||st.get(r,'UserID')
+          })).filter(s=>s.userId&&s.classSheetId);
+          setView('login');
+          return;
+        }
+      }catch(_){}
+      // Shared account but no students tab — fall through to standard flow
+      studentMode=false;
+      await resolveClassSheet();
+    } else {
+      // Personal Google account — standard class discovery flow
       studentMode=false;
       allStudents=[];
       await resolveClassSheet();
-    } else {
-      // Student mode
-      studentMode=true;
-      allStudents=st.rows.map((r,i)=>({
-        rowIndex:i+2,
-        userId:st.get(r,'UserID'),
-        classSheetId:st.get(r,'ClassSheetID'),
-        displayName:st.get(r,'DisplayName')||st.get(r,'UserID')
-      })).filter(s=>s.userId&&s.classSheetId);
-      setView('login');
-      document.getElementById('logout-btn').style.display='block';
     }
   }catch(e){
-    // Students tab doesn't exist yet — standard flow
     studentMode=false;
     await resolveClassSheet();
   }

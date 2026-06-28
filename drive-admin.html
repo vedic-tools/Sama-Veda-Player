@@ -1237,9 +1237,9 @@ document.getElementById('add-student-btn').addEventListener('click',async()=>{
   if(!userId){ showError('add-student-error','User ID is required.'); return; }
   if(!classSheetId){ showError('add-student-error','Please select a class sheet.'); return; }
 
-  // Check for duplicate UserID
-  if(allStudents.some(s=>s.userId.toLowerCase()===userId.toLowerCase())){
-    showError('add-student-error','User ID already exists. Choose a different one.'); return;
+  // Check for duplicate UserID + ClassSheetID combination
+  if(allStudents.some(s=>s.userId.toLowerCase()===userId.toLowerCase()&&s.classSheetId===classSheetId)){
+    showError('add-student-error','This student is already assigned to that class sheet.'); return;
   }
 
   document.getElementById('add-student-btn').disabled=true;
