@@ -144,6 +144,24 @@
   .track-row.playing .track-play-icon,.track-row:hover .track-play-icon{color:var(--saffron);}
   .track-name{font-family:var(--serif);font-size:16px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
 
+  /* COLLECTION TABS */
+  .col-tabs{display:flex;gap:2px;padding:8px 12px 0;background:var(--white);border-top:1px solid var(--border);}
+  .col-tab-btn{font-family:var(--sans);font-size:12px;font-weight:500;height:30px;padding:0 14px;border:none;border-radius:6px 6px 0 0;cursor:pointer;transition:all 0.15s;background:transparent;color:var(--ink-soft);}
+  .col-tab-btn.active{background:var(--parchment-d);color:var(--ink);}
+  .col-tab-btn:hover:not(.active){color:var(--ink);}
+  .col-tab-content{border-top:1px solid var(--border);}
+
+  /* DOCUMENT LIST */
+  .doc-list{padding:4px 0;}
+  .doc-row{display:flex;align-items:center;gap:10px;padding:9px 16px 9px 20px;cursor:pointer;border-top:1px solid var(--border);transition:background 0.1s;text-decoration:none;color:inherit;}
+  .doc-row:first-child{border-top:none;}
+  .doc-row:hover{background:var(--parchment);}
+  .doc-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
+  .doc-name{font-family:var(--serif);font-size:15px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .doc-type{font-size:10px;font-weight:500;color:var(--ink-soft);background:var(--parchment-d);border-radius:4px;padding:2px 6px;flex-shrink:0;text-transform:uppercase;}
+  .doc-loading{padding:14px 16px;font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:8px;}
+  .doc-empty{padding:14px 16px;font-size:13px;color:var(--ink-soft);}
+
   /* EMPTY / NO VERSION */
   #empty-state{display:none;text-align:center;padding:3rem 1rem;}
   .empty-title{font-family:var(--serif);font-size:20px;font-weight:300;font-style:italic;color:var(--ink-mid);margin-bottom:6px;}
@@ -280,6 +298,7 @@
 const CLIENT_ID          = '730888202622-b4ttnasrooktvq7gm7rcng6l1tu0gfcu.apps.googleusercontent.com';
 const MASTER_SHEET_ID    = '1sEDcKrc3AEZ8DMJ9HEfi82wRMts2BshFqKzvTw6eB3A';
 const CLASSES_FOLDER_ID  = '1joiInIm802VoenMRQwcbN2osPrG_37xu';
+const DOCS_FOLDER_ID     = '1UnNpCweEYMj73ANg32E54iDoQzdTPBzF';
 const SHARED_ACCOUNT     = 'sama.learner@gmail.com';
 const SCOPES = [
   'https://www.googleapis.com/auth/drive.readonly',
@@ -299,6 +318,9 @@ let playQueue        = [];
 let queueIndex       = -1;
 let currentTrackId   = null;
 let availableSheets  = [];
+
+// Documents cache: {collectionName: [{id, name, mimeType}] | 'loading' | 'error'}
+let docsCache = {};
 
 // Student auth state
 let studentMode      = false; // true when Students tab has rows
@@ -617,6 +639,63 @@ async function loadData(){
   }
 }
 
+// ── DOCUMENTS ────────────────────────────────────────────────────────────────
+function getMimeIcon(mimeType, name){
+  if(mimeType==='application/pdf'||name.toLowerCase().endsWith('.pdf')) return '📄';
+  if(mimeType.includes('word')||name.toLowerCase().endsWith('.docx')) return '📝';
+  if(mimeType.includes('presentation')||name.toLowerCase().endsWith('.pptx')) return '📊';
+  if(mimeType.includes('spreadsheet')||name.toLowerCase().endsWith('.xlsx')) return '📋';
+  if(mimeType.includes('image')) return '🖼️';
+  if(mimeType.includes('audio')) return '🎵';
+  if(mimeType.includes('video')) return '🎬';
+  return '📎';
+}
+
+function getMimeLabel(mimeType, name){
+  if(mimeType==='application/pdf'||name.toLowerCase().endsWith('.pdf')) return 'PDF';
+  if(mimeType.includes('word')) return 'Word';
+  if(mimeType.includes('presentation')) return 'Slides';
+  if(mimeType.includes('spreadsheet')) return 'Sheet';
+  if(mimeType.includes('image')) return 'Image';
+  if(mimeType==='application/vnd.google-apps.document') return 'Doc';
+  if(mimeType==='application/vnd.google-apps.presentation') return 'Slides';
+  if(mimeType==='application/vnd.google-apps.spreadsheet') return 'Sheet';
+  return 'File';
+}
+
+function getDriveViewUrl(fileId, mimeType){
+  // Google Workspace files open in their native editor
+  if(mimeType.startsWith('application/vnd.google-apps.'))
+    return `https://drive.google.com/file/d/${fileId}/view`;
+  return `https://drive.google.com/file/d/${fileId}/view`;
+}
+
+async function fetchCollectionDocs(collectionName){
+  const key=collectionName.toLowerCase();
+  if(docsCache[key]) return docsCache[key];
+  docsCache[key]='loading';
+  try{
+    // Find subfolder in Collection Documents matching collection name
+    const folderQ=`'${DOCS_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+    const folderRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(folderQ)}&fields=files(id,name)&pageSize=100`);
+    const folders=folderRes.files||[];
+    const match=folders.find(f=>f.name.toLowerCase()===key);
+    if(!match){
+      docsCache[key]=[];
+      return [];
+    }
+    // List files inside the matching subfolder
+    const filesQ=`'${match.id}' in parents and trashed=false`;
+    const filesRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(filesQ)}&fields=files(id,name,mimeType)&orderBy=name&pageSize=100`);
+    const docs=(filesRes.files||[]).filter(f=>!f.mimeType.includes('folder'));
+    docsCache[key]=docs;
+    return docs;
+  }catch(e){
+    docsCache[key]=[];
+    return [];
+  }
+}
+
 // ── RENDER ────────────────────────────────────────────────────────────────────
 const ICONS=['📿','🪘','🎵','🕉️','🎶','🪗','🎼','🔔'];
 function renderCollections(filterText){
@@ -659,9 +738,28 @@ function renderCollections(filterText){
     header.addEventListener('click',()=>{ col.expanded=!shouldExpand; renderCollections(document.getElementById('search-input').value); });
     card.appendChild(header);
     if(shouldExpand){
-      const tList=document.createElement('div'); tList.className='track-list';
+      // Tab bar
+      const tabBar=document.createElement('div');
+      tabBar.className='col-tabs';
+      const tracksTabBtn=document.createElement('button');
+      tracksTabBtn.className='col-tab-btn active';
+      tracksTabBtn.textContent='🎵 Tracks';
+      const docsTabBtn=document.createElement('button');
+      docsTabBtn.className='col-tab-btn';
+      docsTabBtn.textContent='📄 Documents';
+      tabBar.appendChild(tracksTabBtn);
+      tabBar.appendChild(docsTabBtn);
+      card.appendChild(tabBar);
+
+      // Tab content wrapper
+      const tabContent=document.createElement('div');
+      tabContent.className='col-tab-content';
+
+      // Tracks panel
+      const tracksPanel=document.createElement('div');
+      tracksPanel.className='track-list';
       if(tracksToShow.length===0){
-        tList.innerHTML='<div style="padding:12px 16px;font-size:13px;color:var(--ink-soft);">No tracks</div>';
+        tracksPanel.innerHTML='<div style="padding:12px 16px;font-size:13px;color:var(--ink-soft);">No tracks</div>';
       } else {
         tracksToShow.forEach(track=>{
           const isPlaying=track.id===currentTrackId;
@@ -669,10 +767,58 @@ function renderCollections(filterText){
           row.className='track-row'+(isPlaying?' playing':'');
           row.innerHTML=`<span class="track-num">${track.order}</span><span class="track-play-icon">${isPlaying?'♪':'▶'}</span><span class="track-name">${esc(track.name)}</span>`;
           row.addEventListener('click',()=>startQueue(col,[track],0));
-          tList.appendChild(row);
+          tracksPanel.appendChild(row);
         });
       }
-      card.appendChild(tList);
+      tabContent.appendChild(tracksPanel);
+
+      // Documents panel (hidden initially)
+      const docsPanel=document.createElement('div');
+      docsPanel.style.display='none';
+      docsPanel.innerHTML='<div class="doc-loading"><div class="mini-spinner"></div>Loading documents…</div>';
+
+      let docsLoaded=false;
+      docsTabBtn.addEventListener('click',async()=>{
+        tracksTabBtn.classList.remove('active');
+        docsTabBtn.classList.add('active');
+        tracksPanel.style.display='none';
+        docsPanel.style.display='block';
+        if(!docsLoaded){
+          docsLoaded=true;
+          const docs=await fetchCollectionDocs(col.name);
+          docsPanel.innerHTML='';
+          if(docs==='loading'||docs.length===0){
+            docsPanel.innerHTML='<div class="doc-empty">No documents found for this collection.</div>';
+          } else {
+            const list=document.createElement('div');
+            list.className='doc-list';
+            docs.forEach(doc=>{
+              const a=document.createElement('a');
+              a.className='doc-row';
+              a.href=getDriveViewUrl(doc.id,doc.mimeType);
+              a.target='_blank';
+              a.rel='noopener noreferrer';
+              a.innerHTML=`
+                <span class="doc-icon">${getMimeIcon(doc.mimeType,doc.name)}</span>
+                <span class="doc-name">${esc(doc.name)}</span>
+                <span class="doc-type">${getMimeLabel(doc.mimeType,doc.name)}</span>
+              `;
+              list.appendChild(a);
+            });
+            docsPanel.appendChild(list);
+          }
+        }
+      });
+
+      tracksTabBtn.addEventListener('click',()=>{
+        docsTabBtn.classList.remove('active');
+        tracksTabBtn.classList.add('active');
+        docsPanel.style.display='none';
+        tracksPanel.style.display='block';
+      });
+
+      tabContent.appendChild(docsPanel);
+      card.appendChild(tabContent);
     }
     container.appendChild(card);
   });
