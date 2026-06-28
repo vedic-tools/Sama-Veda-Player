@@ -151,6 +151,43 @@
   .pending-banner{background:var(--warning-lt);border-top:1px solid rgba(176,120,0,0.2);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--warning);}
   .pending-banner.hidden{display:none;}
 
+  /* REPLACE/RECORD MODAL */
+  #track-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:50;align-items:center;justify-content:center;padding:1rem;}
+  #track-modal-overlay.show{display:flex;}
+  #track-modal{background:var(--white);border-radius:var(--radius-lg);padding:1.5rem;width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px;}
+  .tm-title{font-family:var(--serif);font-size:20px;font-weight:400;}
+  .tm-track-name{font-size:13px;color:var(--ink-soft);margin-top:-8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tm-tabs{display:flex;gap:2px;background:var(--parchment-d);border-radius:var(--radius);padding:3px;}
+  .tm-tab{font-family:var(--sans);font-size:13px;font-weight:500;flex:1;height:32px;border:none;border-radius:calc(var(--radius) - 3px);cursor:pointer;background:transparent;color:var(--ink-soft);transition:all 0.15s;}
+  .tm-tab.active{background:var(--white);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+
+  /* Replace panel */
+  .tm-replace-panel,.tm-record-panel{display:none;}
+  .tm-replace-panel.active,.tm-record-panel.active{display:flex;flex-direction:column;gap:12px;}
+  .tm-drop-zone{border:2px dashed var(--border-md);border-radius:var(--radius);padding:2rem 1rem;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--parchment);}
+  .tm-drop-zone:hover,.tm-drop-zone.drag-over{border-color:var(--saffron);background:var(--saffron-lt);}
+  .tm-drop-icon{font-size:28px;margin-bottom:8px;}
+  .tm-drop-text{font-size:14px;color:var(--ink-mid);}
+  .tm-drop-hint{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+  .tm-file-selected{background:var(--success-lt);border:1px solid rgba(46,125,50,0.2);border-radius:var(--radius);padding:10px 12px;font-size:13px;color:var(--success);display:none;align-items:center;gap:8px;}
+  #tm-file-input{display:none;}
+
+  /* Record panel */
+  .tm-record-status{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--parchment);border-radius:var(--radius);font-size:14px;}
+  .tm-rec-dot{width:10px;height:10px;border-radius:50%;background:var(--ink-soft);flex-shrink:0;}
+  .tm-rec-dot.recording{background:var(--danger);animation:recpulse 1s ease-in-out infinite;}
+  @keyframes recpulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  .tm-rec-label{flex:1;color:var(--ink-mid);}
+  .tm-rec-timer{font-variant-numeric:tabular-nums;font-weight:500;color:var(--ink);min-width:40px;text-align:right;}
+  .tm-preview-wrap{display:none;flex-direction:column;gap:6px;}
+  .tm-preview-label{font-size:12px;color:var(--ink-soft);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;}
+  .tm-preview-audio{width:100%;height:32px;accent-color:var(--saffron);}
+  .tm-format-note{font-size:11px;color:var(--ink-soft);background:var(--parchment);border-radius:6px;padding:6px 10px;line-height:1.5;}
+
+  /* Modal actions */
+  .tm-actions{display:flex;gap:8px;padding-top:4px;}
+  .tm-error{display:none;font-size:13px;color:var(--danger);background:var(--danger-lt);border:1px solid rgba(192,57,43,0.2);border-radius:var(--radius);padding:8px 12px;line-height:1.5;}
+
   @media(max-width:600px){
     #user-email{display:none!important;}
     .track-table th:nth-child(3),.track-table td:nth-child(3){display:none;}
@@ -310,6 +347,60 @@
   </div>
 </div>
 
+<!-- Replace / Record Modal -->
+<div id="track-modal-overlay">
+  <div id="track-modal">
+    <div class="tm-title">Update Audio Track</div>
+    <div class="tm-track-name" id="tm-track-name">—</div>
+
+    <!-- Tabs -->
+    <div class="tm-tabs">
+      <button class="tm-tab active" id="tm-tab-replace">📁 Replace with file</button>
+      <button class="tm-tab" id="tm-tab-record">⏺ Record new audio</button>
+    </div>
+
+    <!-- Replace panel -->
+    <div class="tm-replace-panel active" id="tm-replace-panel">
+      <div class="tm-drop-zone" id="tm-drop-zone">
+        <div class="tm-drop-icon">🎵</div>
+        <div class="tm-drop-text">Click to choose an audio file</div>
+        <div class="tm-drop-hint">or drag and drop here · MP3, M4A, WAV, OGG supported</div>
+      </div>
+      <div class="tm-file-selected" id="tm-file-selected">
+        <span>✓</span><span id="tm-file-name"></span>
+      </div>
+      <input type="file" id="tm-file-input" accept="audio/*" />
+    </div>
+
+    <!-- Record panel -->
+    <div class="tm-record-panel" id="tm-record-panel">
+      <div class="tm-record-status">
+        <div class="tm-rec-dot" id="tm-rec-dot"></div>
+        <span class="tm-rec-label" id="tm-rec-label">Ready to record</span>
+        <span class="tm-rec-timer" id="tm-rec-timer">0:00</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-danger" id="tm-record-btn" style="flex:1;">⏺ Start recording</button>
+        <button class="btn btn-secondary" id="tm-stop-btn" style="flex:1;" disabled>⏹ Stop</button>
+      </div>
+      <div class="tm-preview-wrap" id="tm-preview-wrap">
+        <span class="tm-preview-label">Preview recording</span>
+        <audio class="tm-preview-audio" id="tm-preview-audio" controls></audio>
+      </div>
+      <div class="tm-format-note">
+        ℹ️ Recordings are saved in your browser's native audio format (WebM or MP4). Playback works in all modern browsers.
+      </div>
+    </div>
+
+    <div class="tm-error" id="tm-error"></div>
+
+    <div class="tm-actions">
+      <button class="btn btn-primary" id="tm-save-btn" disabled style="flex:1;">💾 Save & Replace</button>
+      <button class="btn btn-secondary" id="tm-cancel-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script src="config.js"></script>
@@ -322,7 +413,7 @@ const CLASSES_FOLDER_ID    = APP_CONFIG.CLASSES_FOLDER_ID;
 const COLLECTIONS_FOLDER_ID= APP_CONFIG.COLLECTIONS_FOLDER_ID;
 const SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
-  'https://www.googleapis.com/auth/drive.readonly'
+  'https://www.googleapis.com/auth/drive'  // full drive needed: read folders, write file content, manage permissions
 ].join(' ');
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -870,7 +961,7 @@ function renderCollections(){
         <th class="name-cell">Track Name</th>
         <th>Drive Filename</th>
         <th class="status-cell">Status</th>
-        <th class="action-cell"></th>
+        <th style="width:170px;"></th>
       </tr></thead>`;
       const tbody=document.createElement('tbody');
 
@@ -928,6 +1019,22 @@ function renderCollections(){
           removeBtn.textContent='Remove';
           removeBtn.addEventListener('click',()=>removeTrackFromSheet(track,col));
           actionTd.appendChild(removeBtn);
+        } else {
+          const btnWrap=document.createElement('div');
+          btnWrap.style.cssText='display:flex;gap:5px;justify-content:flex-end;';
+          const replaceBtn=document.createElement('button');
+          replaceBtn.className='btn btn-secondary btn-sm';
+          replaceBtn.title='Replace with a file';
+          replaceBtn.textContent='↑ Replace';
+          replaceBtn.addEventListener('click',()=>openTrackModal(track,'replace'));
+          const recordBtn=document.createElement('button');
+          recordBtn.className='btn btn-secondary btn-sm';
+          recordBtn.title='Record new audio';
+          recordBtn.textContent='⏺ Record';
+          recordBtn.addEventListener('click',()=>openTrackModal(track,'record'));
+          btnWrap.appendChild(replaceBtn);
+          btnWrap.appendChild(recordBtn);
+          actionTd.appendChild(btnWrap);
         }
 
         tr.appendChild(orderTd); tr.appendChild(nameTd); tr.appendChild(fileTd);
@@ -1291,6 +1398,231 @@ function initTabs(){
     });
   });
 }
+
+
+// ── TRACK REPLACE / RECORD MODAL ─────────────────────────────────────────────
+let currentModalTrack = null;
+let mediaRecorder      = null;
+let recordedChunks     = [];
+let recordedBlob       = null;
+let selectedFile       = null;
+let recordTimerInterval= null;
+let recordSeconds      = 0;
+
+function openTrackModal(track, mode){
+  currentModalTrack=track;
+  selectedFile=null; recordedBlob=null; recordedChunks=[];
+
+  // Reset UI
+  document.getElementById('tm-track-name').textContent=track.name;
+  document.getElementById('tm-error').style.display='none';
+  document.getElementById('tm-save-btn').disabled=true;
+  document.getElementById('tm-file-selected').style.display='none';
+  document.getElementById('tm-file-name').textContent='';
+  document.getElementById('tm-file-input').value='';
+  document.getElementById('tm-preview-wrap').style.display='none';
+  document.getElementById('tm-preview-audio').src='';
+  document.getElementById('tm-rec-dot').className='tm-rec-dot';
+  document.getElementById('tm-rec-label').textContent='Ready to record';
+  document.getElementById('tm-rec-timer').textContent='0:00';
+  document.getElementById('tm-record-btn').disabled=false;
+  document.getElementById('tm-stop-btn').disabled=true;
+  document.getElementById('tm-record-btn').textContent='⏺ Start recording';
+
+  // Set active tab
+  switchModalTab(mode);
+  document.getElementById('track-modal-overlay').classList.add('show');
+}
+
+function switchModalTab(mode){
+  ['replace','record'].forEach(m=>{
+    document.getElementById('tm-tab-'+m).classList.toggle('active',m===mode);
+    document.getElementById('tm-'+m+'-panel').classList.toggle('active',m===mode);
+  });
+  // Stop recording if switching away
+  if(mode==='replace'&&mediaRecorder&&mediaRecorder.state==='recording'){
+    mediaRecorder.stop(); stopRecordTimer();
+  }
+}
+
+function closeTrackModal(){
+  document.getElementById('track-modal-overlay').classList.remove('show');
+  if(mediaRecorder&&mediaRecorder.state==='recording'){
+    mediaRecorder.stop(); stopRecordTimer();
+  }
+  currentModalTrack=null; selectedFile=null; recordedBlob=null;
+}
+
+// ── FILE REPLACE ──────────────────────────────────────────────────────────────
+document.getElementById('tm-drop-zone').addEventListener('click',()=>{
+  document.getElementById('tm-file-input').click();
+});
+document.getElementById('tm-drop-zone').addEventListener('dragover',e=>{
+  e.preventDefault(); e.currentTarget.classList.add('drag-over');
+});
+document.getElementById('tm-drop-zone').addEventListener('dragleave',e=>{
+  e.currentTarget.classList.remove('drag-over');
+});
+document.getElementById('tm-drop-zone').addEventListener('drop',e=>{
+  e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];
+  if(file&&file.type.startsWith('audio/')) setSelectedFile(file);
+  else showModalError('Please drop an audio file.');
+});
+document.getElementById('tm-file-input').addEventListener('change',e=>{
+  const file=e.target.files[0];
+  if(file) setSelectedFile(file);
+});
+
+function setSelectedFile(file){
+  selectedFile=file;
+  document.getElementById('tm-file-name').textContent=file.name+' ('+formatSize(file.size)+')';
+  document.getElementById('tm-file-selected').style.display='flex';
+  document.getElementById('tm-save-btn').disabled=false;
+  document.getElementById('tm-error').style.display='none';
+}
+
+function formatSize(bytes){
+  if(bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB';
+  return (bytes/(1024*1024)).toFixed(1)+' MB';
+}
+
+// ── RECORDING ─────────────────────────────────────────────────────────────────
+document.getElementById('tm-record-btn').addEventListener('click',async()=>{
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    recordedChunks=[];
+    recordedBlob=null;
+    mediaRecorder=new MediaRecorder(stream);
+    mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop=()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      const mimeType=mediaRecorder.mimeType||'audio/webm';
+      recordedBlob=new Blob(recordedChunks,{type:mimeType});
+      const url=URL.createObjectURL(recordedBlob);
+      document.getElementById('tm-preview-audio').src=url;
+      document.getElementById('tm-preview-wrap').style.display='flex';
+      document.getElementById('tm-rec-dot').className='tm-rec-dot';
+      document.getElementById('tm-rec-label').textContent='Recording complete — preview below';
+      document.getElementById('tm-record-btn').textContent='⏺ Record again';
+      document.getElementById('tm-record-btn').disabled=false;
+      document.getElementById('tm-stop-btn').disabled=true;
+      document.getElementById('tm-save-btn').disabled=false;
+    };
+    mediaRecorder.start(100);
+    recordSeconds=0;
+    startRecordTimer();
+    document.getElementById('tm-rec-dot').className='tm-rec-dot recording';
+    document.getElementById('tm-rec-label').textContent='Recording…';
+    document.getElementById('tm-record-btn').disabled=true;
+    document.getElementById('tm-stop-btn').disabled=false;
+    document.getElementById('tm-preview-wrap').style.display='none';
+    document.getElementById('tm-save-btn').disabled=true;
+  }catch(e){
+    showModalError('Microphone access denied. Please allow microphone access and try again.');
+  }
+});
+
+document.getElementById('tm-stop-btn').addEventListener('click',()=>{
+  if(mediaRecorder&&mediaRecorder.state==='recording'){
+    mediaRecorder.stop(); stopRecordTimer();
+  }
+});
+
+function startRecordTimer(){
+  stopRecordTimer();
+  recordTimerInterval=setInterval(()=>{
+    recordSeconds++;
+    const m=Math.floor(recordSeconds/60);
+    const s=recordSeconds%60;
+    document.getElementById('tm-rec-timer').textContent=m+':'+(s<10?'0':'')+s;
+  },1000);
+}
+function stopRecordTimer(){ clearInterval(recordTimerInterval); }
+
+// ── SAVE (both modes) ─────────────────────────────────────────────────────────
+document.getElementById('tm-save-btn').addEventListener('click',async()=>{
+  const blob=recordedBlob||selectedFile;
+  if(!blob||!currentModalTrack){ showModalError('Nothing to save.'); return; }
+
+  document.getElementById('tm-save-btn').disabled=true;
+  document.getElementById('tm-save-btn').textContent='Saving…';
+  document.getElementById('tm-error').style.display='none';
+
+  try{
+    await replaceTrackFile(currentModalTrack.fileId, blob,
+      selectedFile?selectedFile.name:currentModalTrack.name,
+      blob.type||'audio/webm'
+    );
+    toast('Track replaced: '+currentModalTrack.name,'success');
+    closeTrackModal();
+  }catch(e){
+    showModalError('Could not save: '+e.message);
+    document.getElementById('tm-save-btn').disabled=false;
+    document.getElementById('tm-save-btn').textContent='💾 Save & Replace';
+  }
+});
+
+async function replaceTrackFile(fileId, blob, filename, mimeType){
+  // Use Drive API files.update with multipart upload to replace file content
+  // while preserving the file ID, name, and all sharing permissions
+  const boundary='sama_veda_boundary_'+Date.now();
+  const metadata=JSON.stringify({name:filename});
+
+  // Build multipart body
+  const metaPart=`--${boundary}
+Content-Type: application/json; charset=UTF-8
+
+${metadata}
+`;
+  const dataPart=`--${boundary}
+Content-Type: ${mimeType}
+
+`;
+  const closing=`
+--${boundary}--`;
+
+  // Combine into single ArrayBuffer
+  const encoder=new TextEncoder();
+  const metaBytes=encoder.encode(metaPart);
+  const dataBytes=encoder.encode(dataPart);
+  const closeBytes=encoder.encode(closing);
+  const blobBytes=await blob.arrayBuffer();
+
+  const combined=new Uint8Array(metaBytes.length+dataBytes.length+blobBytes.byteLength+closeBytes.length);
+  let offset=0;
+  combined.set(metaBytes,offset); offset+=metaBytes.length;
+  combined.set(dataBytes,offset); offset+=dataBytes.length;
+  combined.set(new Uint8Array(blobBytes),offset); offset+=blobBytes.byteLength;
+  combined.set(closeBytes,offset);
+
+  const url=`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`;
+  const res=await fetch(url,{
+    method:'PATCH',
+    headers:{
+      Authorization:'Bearer '+accessToken,
+      'Content-Type':`multipart/related; boundary=${boundary}`
+    },
+    body:combined
+  });
+  if(!res.ok) throw new Error('Drive update '+res.status+': '+(await res.text()).slice(0,200));
+  return res.json();
+}
+
+function showModalError(msg){
+  const el=document.getElementById('tm-error');
+  el.textContent=msg; el.style.display='block';
+}
+
+// Tab switching
+document.getElementById('tm-tab-replace').addEventListener('click',()=>switchModalTab('replace'));
+document.getElementById('tm-tab-record').addEventListener('click',()=>switchModalTab('record'));
+
+// Cancel and overlay click
+document.getElementById('tm-cancel-btn').addEventListener('click',closeTrackModal);
+document.getElementById('track-modal-overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('track-modal-overlay')) closeTrackModal();
+});
 
 // ── WIRE UP ───────────────────────────────────────────────────────────────────
 document.getElementById('sync-all-btn').addEventListener('click',syncAll);
