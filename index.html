@@ -401,7 +401,7 @@ async function afterGoogleSignIn(){
         userId:st.get(r,'UserID'),
         classSheetId:st.get(r,'ClassSheetID'),
         displayName:st.get(r,'DisplayName')||st.get(r,'UserID')
-      })).filter(s=>s.userId);
+      })).filter(s=>s.userId&&s.classSheetId);
       setView('login');
       document.getElementById('logout-btn').style.display='block';
     }
@@ -430,8 +430,32 @@ async function loadStudentClass(){
   const nameEl=document.getElementById('learner-name-el');
   nameEl.textContent=currentStudent.displayName;
   nameEl.style.display='inline';
-  activeSheetId=currentStudent.classSheetId;
-  await loadData();
+
+  // Find all class entries for this student
+  const studentClasses=allStudents.filter(s=>s.userId.toLowerCase()===currentStudent.userId.toLowerCase());
+
+  if(studentClasses.length===1){
+    // Single class — load directly
+    activeSheetId=studentClasses[0].classSheetId;
+    await loadData();
+  } else {
+    // Multiple classes — show class selector
+    availableSheets=[];
+    // Fetch sheet names for each class
+    setLoading('Loading your classes…');
+    await Promise.all(studentClasses.map(async s=>{
+      try{
+        const url=`https://sheets.googleapis.com/v4/spreadsheets/${s.classSheetId}?fields=properties.title`;
+        const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+        const data=await res.json();
+        availableSheets.push({id:s.classSheetId,name:data.properties?.title||s.classSheetId});
+      }catch(_){
+        availableSheets.push({id:s.classSheetId,name:s.classSheetId});
+      }
+    }));
+    availableSheets.sort((a,b)=>a.name.localeCompare(b.name));
+    showClassSelector();
+  }
 }
 
 // ── STANDARD FLOW (no student mode) ──────────────────────────────────────────

@@ -111,7 +111,7 @@
 
   /* PANEL */
   .panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
-  .view:not(.active) .panel{display:none;}
+  .view:not(.active){display:none!important;}
   .panel-header{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   .panel-title{font-family:var(--serif);font-size:18px;font-weight:400;flex:1;min-width:0;display:flex;align-items:center;gap:8px;}
   .panel-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
@@ -174,6 +174,14 @@
   select.student-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238A857C' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
   input.student-input:focus,select.student-input:focus{border-color:var(--saffron);box-shadow:0 0 0 2px var(--saffron-lt);}
   @media(max-width:540px){.add-student-grid{grid-template-columns:1fr;}}
+
+  /* TABS */
+  #tab-bar{display:flex;gap:2px;background:var(--parchment-d);border-radius:var(--radius-lg);padding:3px;margin-bottom:1.25rem;width:fit-content;}
+  .tab-btn{font-family:var(--sans);font-size:13px;font-weight:500;height:36px;padding:0 20px;border:none;border-radius:calc(var(--radius-lg) - 3px);cursor:pointer;transition:all 0.15s;background:transparent;color:var(--ink-soft);display:flex;align-items:center;gap:7px;}
+  .tab-btn.active{background:var(--white);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+  .tab-btn:hover:not(.active){background:var(--white);color:var(--ink-mid);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:grid;gap:1.25rem;}
 </style>
 </head>
 <body>
@@ -213,6 +221,15 @@
   <!-- Main -->
   <div id="main-view" class="view">
 
+    <!-- Tab bar -->
+    <div id="tab-bar">
+      <button class="tab-btn active" id="tab-collections-btn">📚 Collections &amp; Tracks</button>
+      <button class="tab-btn" id="tab-students-btn">👤 Students</button>
+    </div>
+
+    <!-- Collections tab panel -->
+    <div class="tab-panel active" id="tab-collections">
+
     <!-- Summary bar -->
     <div id="summary-bar">
       <div class="summary-stat"><span class="summary-label">Collections</span><span class="summary-val" id="stat-collections">—</span></div>
@@ -235,6 +252,11 @@
     <div id="collections-container"></div>
 
   </div>
+    </div><!-- end tab-collections -->
+
+    <!-- Students tab panel -->
+    <div class="tab-panel" id="tab-students">
+
     <!-- Students Panel -->
     <div class="panel" id="students-panel">
       <div class="panel-header">
@@ -282,6 +304,8 @@
 
       </div>
     </div>
+
+    </div><!-- end tab-students -->
 
   </div>
 </div>
@@ -573,8 +597,9 @@ async function loadAll(){
     computeDiff();
 
     setView('main');
+    initTabs();
     renderAll();
-    loadStudents(); // Load students in parallel
+    // Students load on demand when tab is clicked
   }catch(e){
     setView('signin');
     showError('signin-error','Could not load data: '+e.message);
@@ -1246,6 +1271,25 @@ async function deleteStudent(student){
 }
 
 document.getElementById('refresh-students-btn').addEventListener('click',loadStudents);
+
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function initTabs(){
+  const tabs=[
+    {btn:'tab-collections-btn', panel:'tab-collections'},
+    {btn:'tab-students-btn',    panel:'tab-students'}
+  ];
+  tabs.forEach(({btn,panel})=>{
+    document.getElementById(btn).addEventListener('click',()=>{
+      tabs.forEach(t=>{
+        document.getElementById(t.btn).classList.toggle('active',t.btn===btn);
+        document.getElementById(t.panel).classList.toggle('active',t.panel===panel);
+      });
+      // Load students when switching to students tab for the first time
+      if(panel==='tab-students'&&allStudents.length===0) loadStudents();
+    });
+  });
+}
 
 // ── WIRE UP ───────────────────────────────────────────────────────────────────
 document.getElementById('sync-all-btn').addEventListener('click',syncAll);
