@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<!-- v2.1 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sama Veda</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -487,11 +488,7 @@ document.getElementById('userid-input').addEventListener('keydown',e=>{ if(e.key
 
 // ── LOAD STUDENT CLASS ────────────────────────────────────────────────────────
 async function loadStudentClass(){
-  // Update shared account display from config
-const sharedDisplayEl=document.getElementById('shared-account-display');
-if(sharedDisplayEl&&APP_CONFIG.SHARED_LEARNER_ACCOUNT)
-  sharedDisplayEl.textContent=APP_CONFIG.SHARED_LEARNER_ACCOUNT;
-const nameEl=document.getElementById('learner-name-el');
+  const nameEl=document.getElementById('learner-name-el');
   nameEl.textContent=currentStudent.displayName;
   nameEl.style.display='inline';
 
@@ -869,9 +866,7 @@ if(nameEl) nameEl.textContent=APP_CONFIG.APP_NAME;
 // Update sign-in screen title
 const titleEl=document.querySelector('.auth-title');
 if(titleEl) titleEl.textContent=APP_CONFIG.APP_NAME;
-// Update shared account hint
-const hintEl=document.querySelector('.shared-account-hint strong');
-if(hintEl&&APP_CONFIG.SHARED_LEARNER_ACCOUNT) hintEl.textContent=APP_CONFIG.SHARED_LEARNER_ACCOUNT;
+
 
 (async function boot(){ setView('signin'); await initAuth(); })();
 </script>
