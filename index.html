@@ -16,6 +16,7 @@
     --success:#2E7D32; --success-lt:#E8F5E9;
     --learning:#1A56A4; --learning-lt:#EEF4FF;
     --final:#2E7D32; --final-lt:#E8F5E9;
+    --info:#1A56A4; --info-lt:#EEF4FF;
     --border:rgba(28,26,22,0.12); --border-md:rgba(28,26,22,0.22);
     --radius:10px; --radius-lg:16px;
     --sans:'Inter',system-ui,sans-serif; --serif:'Crimson Pro',Georgia,serif;
@@ -30,6 +31,7 @@
       --success:#66BB6A; --success-lt:#0A2010;
       --learning:#6B9FE4; --learning-lt:#0A1A3A;
       --final:#66BB6A; --final-lt:#0A2010;
+      --info:#6B9FE4; --info-lt:#0A1A3A;
       --border:rgba(240,235,225,0.10); --border-md:rgba(240,235,225,0.20);
     }
   }
@@ -46,6 +48,16 @@
   #logout-btn:hover{color:var(--saffron);border-color:var(--saffron);background:var(--saffron-lt);}
   #class-badge{display:none;font-size:12px;color:var(--ink-soft);background:var(--parchment-d);border-radius:20px;padding:3px 10px;cursor:pointer;transition:all 0.15s;border:1px solid var(--border);}
   #class-badge:hover{border-color:var(--saffron);color:var(--saffron);}
+
+  /* ADMIN BAR */
+  #admin-bar{display:none;background:var(--info-lt);border-bottom:1px solid rgba(26,86,164,0.2);padding:8px 1.25rem;align-items:center;gap:12px;font-size:13px;color:var(--info);}
+  #admin-bar.show{display:flex;}
+  #admin-bar .admin-bar-label{font-weight:500;}
+  #admin-bar a{color:var(--info);font-weight:500;text-decoration:none;border:1px solid rgba(26,86,164,0.3);border-radius:6px;padding:3px 10px;transition:all 0.15s;white-space:nowrap;}
+  #admin-bar a:hover{background:var(--info);color:#fff;}
+  #admin-bar .admin-bar-links{display:flex;gap:8px;flex:1;flex-wrap:wrap;}
+  #admin-bar-close{background:none;border:none;color:var(--info);cursor:pointer;font-size:16px;padding:0 4px;opacity:0.6;transition:opacity 0.15s;flex-shrink:0;}
+  #admin-bar-close:hover{opacity:1;}
 
   /* PAGE */
   #page{max-width:680px;margin:0 auto;padding:1.5rem 1.25rem;}
@@ -199,6 +211,13 @@
     <button id="logout-btn">Sign out</button>
   </div>
 </header>
+
+<!-- Admin quick-launch bar -->
+<div id="admin-bar">
+  <span class="admin-bar-label">⚙️ Admin access:</span>
+  <div class="admin-bar-links" id="admin-bar-links"></div>
+  <button id="admin-bar-close" title="Hide">✕</button>
+</div>
 
 <div id="page">
 
@@ -407,6 +426,7 @@ async function initAuth(){
       playQueue=[]; currentTrackId=null; currentStudent=null; studentMode=false;
       document.getElementById('audio-el').src='';
       document.getElementById('player-bar').style.display='none';
+      document.getElementById('admin-bar').classList.remove('show');
       document.getElementById('logout-btn').style.display='none';
       document.getElementById('learner-name-el').style.display='none';
       document.getElementById('class-badge').style.display='none';
@@ -416,6 +436,51 @@ async function initAuth(){
       if(availableSheets.length>1) showClassSelector();
     });
   }catch(e){ showError('signin-error',e.message); }
+}
+
+// ── ADMIN ACCESS CHECK ────────────────────────────────────────────────────────
+async function checkAdminAccess(){
+  // Check editor access to Collections folder, Master Sheet, and Classes folder
+  // Show quick-launch links to admin apps for users who have access
+  const links=[];
+
+  async function canEdit(fileId){
+    try{
+      const url=`https://www.googleapis.com/drive/v3/files/${fileId}?fields=capabilities`;
+      const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+      if(!res.ok) return false;
+      const data=await res.json();
+      return data.capabilities?.canEdit===true;
+    }catch(_){ return false; }
+  }
+
+  // Check editor access in parallel:
+  // Drive Admin link  → editor on Collections folder OR Master Sheet
+  // Class Admin link  → editor on Classes folder
+  const [collectionsEdit, masterEdit, classesEdit] = await Promise.all([
+    APP_CONFIG.COLLECTIONS_FOLDER_ID ? canEdit(APP_CONFIG.COLLECTIONS_FOLDER_ID) : Promise.resolve(false),
+    canEdit(MASTER_SHEET_ID),
+    canEdit(CLASSES_FOLDER_ID)
+  ]);
+
+  if(collectionsEdit || masterEdit){
+    links.push({label:'🗄️ Drive Admin', url:'drive-admin.html'});
+  }
+  if(classesEdit){
+    links.push({label:'✏️ Class Admin', url:'class-admin.html'});
+  }
+
+  if(links.length>0){
+    const linksContainer=document.getElementById('admin-bar-links');
+    linksContainer.innerHTML='';
+    links.forEach(l=>{
+      const a=document.createElement('a');
+      a.href=l.url; a.target='_blank'; a.rel='noopener noreferrer';
+      a.textContent=l.label;
+      linksContainer.appendChild(a);
+    });
+    document.getElementById('admin-bar').classList.add('show');
+  }
 }
 
 // ── AFTER GOOGLE SIGN-IN ──────────────────────────────────────────────────────
@@ -438,6 +503,9 @@ async function afterGoogleSignIn(){
     if(eEl){ eEl.textContent=signedInEmail; eEl.style.display=signedInEmail?'block':'none'; }
     const logoutEl=document.getElementById('logout-btn');
     if(logoutEl) logoutEl.style.display='block';
+
+    // Check admin access and show quick-launch links (non-blocking)
+    checkAdminAccess();
 
     console.log('Signed-in email:', signedInEmail, '| Shared account:', SHARED_ACCOUNT.toLowerCase(), '| Match:', signedInEmail===SHARED_ACCOUNT.toLowerCase());
     // Only activate student mode if signed in as the shared learner account
@@ -857,6 +925,11 @@ audioEl.addEventListener('ended',()=>{ if(queueIndex<playQueue.length-1){ queueI
 
 // ── SEARCH ────────────────────────────────────────────────────────────────────
 document.getElementById('search-input').addEventListener('input',e=>renderCollections(e.target.value));
+
+// ── ADMIN BAR CLOSE ───────────────────────────────────────────────────────────
+document.getElementById('admin-bar-close').addEventListener('click',()=>{
+  document.getElementById('admin-bar').classList.remove('show');
+});
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 // Set app name from config

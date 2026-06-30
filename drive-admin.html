@@ -219,6 +219,37 @@
   .tab-btn:hover:not(.active){background:var(--white);color:var(--ink-mid);}
   .tab-panel{display:none;}
   .tab-panel.active{display:grid;gap:1.25rem;}
+
+  /* ── MASTER SHEET VIEW ── */
+  #ms-collection-select{font-family:var(--sans);font-size:14px;height:40px;border:1px solid var(--border-md);border-radius:var(--radius);background:var(--white);color:var(--ink);padding:0 32px 0 12px;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238A857C' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer;}
+  #ms-collection-select:focus{border-color:var(--saffron);box-shadow:0 0 0 3px var(--saffron-lt);}
+  .ms-col-header{display:flex;align-items:center;gap:12px;padding:13px 16px;background:var(--parchment);border:1px solid var(--border);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
+  .ms-col-name{font-family:var(--serif);font-size:18px;flex:1;}
+  .ms-track-table{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg);overflow:hidden;}
+  .ms-track-table td{padding:9px 14px;font-size:14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .ms-track-table tr:last-child td{border-bottom:none;}
+  .ms-track-table tbody tr:hover td{background:var(--parchment);}
+  .ms-track-table tr.playing td{background:var(--saffron-lt);}
+  .ms-order-cell{color:var(--ink-soft);font-size:12px;width:40px;}
+  .ms-name-cell{font-family:var(--serif);font-size:16px;}
+  .ms-action-cell{text-align:right;width:200px;}
+  .ms-empty{padding:2rem;text-align:center;color:var(--ink-soft);font-size:14px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);}
+
+  /* ── AUDIO PLAYER BAR ── */
+  #da-player-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);z-index:25;padding:10px 1.25rem;box-shadow:0 -2px 12px rgba(0,0,0,0.06);}
+  #da-player-bar.show{display:block;}
+  #da-player-inner{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:7px;}
+  #da-now-row{display:flex;align-items:center;gap:10px;}
+  #da-now-pip{width:8px;height:8px;border-radius:50%;background:var(--saffron);flex-shrink:0;animation:dapulse 1.8s ease-in-out infinite;}
+  @keyframes dapulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.75);}}
+  #da-now-text{flex:1;min-width:0;}
+  #da-now-track{font-family:var(--serif);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
+  #da-now-col{font-size:11px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #da-queue-badge{font-size:11px;color:var(--ink-soft);flex-shrink:0;background:var(--parchment-d);border-radius:20px;padding:2px 8px;display:none;}
+  #da-player-close{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:16px;padding:0 4px;flex-shrink:0;opacity:0.6;}
+  #da-player-close:hover{opacity:1;}
+  #da-audio{width:100%;height:30px;display:block;accent-color:var(--saffron);}
+  body.has-player{padding-bottom:100px;}
 </style>
 </head>
 <body>
@@ -267,28 +298,41 @@
     <!-- Collections tab panel -->
     <div class="tab-panel active" id="tab-collections">
 
-    <!-- Summary bar -->
-    <div id="summary-bar">
-      <div class="summary-stat"><span class="summary-label">Collections</span><span class="summary-val" id="stat-collections">—</span></div>
-      <span class="summary-sep">·</span>
-      <div class="summary-stat"><span class="summary-label">Tracks</span><span class="summary-val" id="stat-tracks">—</span></div>
-      <span class="summary-sep">·</span>
-      <div class="summary-stat" id="stat-changes-wrap" style="display:none;">
-        <span class="summary-label">Pending</span>
-        <span class="summary-val" id="stat-changes" style="color:var(--warning);">—</span>
+      <!-- ── MASTER SHEET VIEW (fast, default) ── -->
+      <div id="ms-view">
+        <div id="ms-toolbar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:1.25rem;">
+          <div style="flex:1;min-width:220px;">
+            <select id="ms-collection-select" style="width:100%;">
+              <option value="">— Select a collection —</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="ms-refresh-btn">↻ Refresh</button>
+          <button class="btn btn-success btn-sm" id="ms-check-sync-btn">🔍 Check for sync</button>
+        </div>
+        <div id="ms-tracks-container"></div>
       </div>
-      <div style="display:flex;gap:8px;margin-left:auto;">
-        <button class="btn btn-secondary btn-sm" id="refresh-btn">↻ Refresh</button>
-        <button class="btn btn-success" id="sync-all-btn" disabled>
-          ✓ <span>Sync all changes</span>
-        </button>
+
+      <!-- ── SYNC VIEW (Drive comparison) ── -->
+      <div id="sync-view" style="display:none;">
+        <div id="summary-bar">
+          <div class="summary-stat"><span class="summary-label">Collections</span><span class="summary-val" id="stat-collections">—</span></div>
+          <span class="summary-sep">·</span>
+          <div class="summary-stat"><span class="summary-label">Tracks</span><span class="summary-val" id="stat-tracks">—</span></div>
+          <span class="summary-sep">·</span>
+          <div class="summary-stat" id="stat-changes-wrap" style="display:none;">
+            <span class="summary-label">Pending</span>
+            <span class="summary-val" id="stat-changes" style="color:var(--warning);">—</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-left:auto;">
+            <button class="btn btn-secondary btn-sm" id="sync-back-btn">← Back</button>
+            <button class="btn btn-success" id="sync-all-btn" disabled>
+              ✓ <span>Sync all changes</span>
+            </button>
+          </div>
+        </div>
+        <div id="collections-container"></div>
       </div>
-    </div>
 
-    <!-- Collections -->
-    <div id="collections-container"></div>
-
-  </div>
     </div><!-- end tab-collections -->
 
     <!-- Students tab panel -->
@@ -344,6 +388,22 @@
 
     </div><!-- end tab-students -->
 
+  </div>
+</div>
+
+<!-- Audio Player Bar -->
+<div id="da-player-bar">
+  <div id="da-player-inner">
+    <div id="da-now-row">
+      <div id="da-now-pip"></div>
+      <div id="da-now-text">
+        <div id="da-now-track">—</div>
+        <div id="da-now-col">—</div>
+      </div>
+      <span id="da-queue-badge"></span>
+      <button id="da-player-close" title="Close player">✕</button>
+    </div>
+    <audio id="da-audio" controls></audio>
   </div>
 </div>
 
@@ -608,27 +668,176 @@ async function checkWriteAccess(){
 }
 
 // ── LOAD ALL ──────────────────────────────────────────────────────────────────
+// Fast default load — Master Sheet only, no Drive scan
 async function loadAll(){
   setLoading('Checking permissions…');
   pendingNameEdits={};
   try{
-    // Gate: verify write access to Master Sheet before loading anything
     const canEdit=await checkWriteAccess();
     if(!canEdit){
       setView('signin');
       showError('signin-error',
         '⛔ Access denied. This tool requires edit access to the Master Sheet. ' +
-        'Please sign in with the Drive admin account (samaveda.midwest@gmail.com). ' +
+        'Please sign in with the Drive admin account. ' +
         'If you believe this is an error, contact your administrator.'
       );
       return;
     }
-
     await ensureHeaders();
+    await loadMasterSheet();
 
-    // 1. Read Drive — two-level: Collections/Learning|Final/CollectionFolders
-    // Also supports flat (collection folders directly in Collections) for backwards compat
-    setLoading('Reading Drive folders…');
+    setView('main');
+    initTabs();
+    showMasterView();
+  }catch(e){
+    setView('signin');
+    showError('signin-error','Could not load data: '+e.message);
+  }
+}
+
+// Read Collections + Tracks tabs from the Master Sheet into memory
+async function loadMasterSheet(){
+  setLoading('Reading Master Sheet…');
+  const [colsData,tracksData]=await Promise.all([
+    sheetsGet('Collections!A:Z'),
+    sheetsGet('Tracks!A:Z')
+  ]);
+  const cols=parseSheet(colsData);
+  sheetCollections=cols.rows.map((r,i)=>({
+    rowIndex:i+1,
+    colId:cols.get(r,'CollectionID'),
+    name:cols.get(r,'CollectionName'),
+    folderId:cols.get(r,'DriveFolderID'),
+    version:cols.get(r,'Version')||''
+  })).filter(c=>c.colId);
+  const trks=parseSheet(tracksData);
+  sheetTracks=trks.rows.map((r,i)=>({
+    rowIndex:i+1,
+    trackId:trks.get(r,'TrackID'),
+    colId:trks.get(r,'CollectionID'),
+    name:trks.get(r,'TrackName'),
+    fileId:trks.get(r,'DriveFileID'),
+    order:parseInt(trks.get(r,'TrackOrder'))||999
+  })).filter(t=>t.fileId);
+}
+
+// ── MASTER SHEET VIEW (dropdown + tracks) ─────────────────────────────────────
+function msVersionRank(v){
+  if(!v) return 2;
+  if(v.toLowerCase()===APP_CONFIG.VERSION_LEARNING.toLowerCase()) return 0;
+  if(v.toLowerCase()===APP_CONFIG.VERSION_FINAL.toLowerCase()) return 1;
+  return 2;
+}
+
+function showMasterView(){
+  document.getElementById('ms-view').style.display='block';
+  document.getElementById('sync-view').style.display='none';
+  renderMasterDropdown();
+}
+
+function renderMasterDropdown(){
+  const sel=document.getElementById('ms-collection-select');
+  const prev=sel.value;
+  // Sort: Learning first, then Final, then others; alphabetical within
+  const sorted=[...sheetCollections].sort((a,b)=>{
+    const ra=msVersionRank(a.version), rb=msVersionRank(b.version);
+    if(ra!==rb) return ra-rb;
+    return a.name.localeCompare(b.name,undefined,{numeric:true});
+  });
+  sel.innerHTML='<option value="">— Select a collection —</option>';
+  // Group with optgroups by version
+  const groups={};
+  groups[APP_CONFIG.VERSION_LEARNING]=[]; groups[APP_CONFIG.VERSION_FINAL]=[]; groups['Other']=[];
+  sorted.forEach(c=>{
+    const v=msVersionRank(c.version)===0?APP_CONFIG.VERSION_LEARNING:msVersionRank(c.version)===1?APP_CONFIG.VERSION_FINAL:'Other';
+    groups[v].push(c);
+  });
+  [[APP_CONFIG.VERSION_LEARNING,APP_CONFIG.VERSION_LEARNING_LABEL],[APP_CONFIG.VERSION_FINAL,APP_CONFIG.VERSION_FINAL_LABEL],['Other','Other']].forEach(([key,label])=>{
+    if(!groups[key]||!groups[key].length) return;
+    const og=document.createElement('optgroup'); og.label=label;
+    groups[key].forEach(c=>{ const o=document.createElement('option'); o.value=c.colId; o.textContent=c.name; og.appendChild(o); });
+    sel.appendChild(og);
+  });
+  if(prev) sel.value=prev;
+  sel.onchange=()=>renderMasterTracks(sel.value);
+  renderMasterTracks(sel.value);
+}
+
+function renderMasterTracks(colId){
+  const container=document.getElementById('ms-tracks-container');
+  container.innerHTML='';
+  if(!colId){
+    container.innerHTML='<div class="ms-empty">Select a collection above to view its tracks.</div>';
+    return;
+  }
+  const col=sheetCollections.find(c=>c.colId===colId);
+  if(!col){ container.innerHTML='<div class="ms-empty">Collection not found.</div>'; return; }
+  const tracks=sheetTracks.filter(t=>t.colId===colId).sort((a,b)=>a.order-b.order);
+
+  // Header with collection name + Play all
+  const header=document.createElement('div');
+  header.className='ms-col-header';
+  const vBadge=col.version?`<span class="badge" style="background:${msVersionRank(col.version)===0?'var(--info-lt)':'var(--success-lt)'};color:${msVersionRank(col.version)===0?'var(--info)':'var(--success)'};">${msVersionRank(col.version)===0?APP_CONFIG.VERSION_LEARNING_LABEL:APP_CONFIG.VERSION_FINAL_LABEL}</span>`:'';
+  header.innerHTML=`<span class="ms-col-name">${esc(col.name)}</span> ${vBadge} <span style="font-size:12px;color:var(--ink-soft);">${tracks.length} track${tracks.length===1?'':'s'}</span>`;
+  if(tracks.length>0){
+    const playAllBtn=document.createElement('button');
+    playAllBtn.className='btn btn-secondary btn-sm';
+    playAllBtn.textContent='▶ Play all';
+    playAllBtn.title='Play all tracks in this collection';
+    playAllBtn.addEventListener('click',()=>startMsQueue(col,tracks));
+    header.appendChild(playAllBtn);
+  }
+  container.appendChild(header);
+
+  if(tracks.length===0){
+    const empty=document.createElement('div');
+    empty.className='ms-empty';
+    empty.style.borderRadius='0 0 var(--radius-lg) var(--radius-lg)';
+    empty.textContent='No tracks in this collection.';
+    container.appendChild(empty);
+    return;
+  }
+
+  const table=document.createElement('table');
+  table.className='ms-track-table';
+  const tbody=document.createElement('tbody');
+  tracks.forEach(track=>{
+    const tr=document.createElement('tr');
+    if(currentlyPlayingFileId===track.fileId) tr.className='playing';
+    const orderTd=document.createElement('td'); orderTd.className='ms-order-cell'; orderTd.textContent=track.order;
+    const nameTd=document.createElement('td'); nameTd.className='ms-name-cell'; nameTd.textContent=track.name;
+    const actionTd=document.createElement('td'); actionTd.className='ms-action-cell';
+    const btnWrap=document.createElement('div');
+    btnWrap.style.cssText='display:flex;gap:5px;justify-content:flex-end;';
+    // Build a track object compatible with the modal/playback helpers
+    const tObj={fileId:track.fileId, name:track.name, displayName:track.name};
+    const playBtn=document.createElement('button');
+    playBtn.className='btn btn-secondary btn-sm da-play-btn';
+    playBtn.dataset.fileId=track.fileId;
+    playBtn.title='Play / pause';
+    playBtn.textContent=(currentlyPlayingFileId===track.fileId&&!audioPlayer.paused)?'⏸':'▶';
+    playBtn.addEventListener('click',()=>toggleMsTrackPlay(tObj,col));
+    const replaceBtn=document.createElement('button');
+    replaceBtn.className='btn btn-secondary btn-sm';
+    replaceBtn.title='Replace with a file'; replaceBtn.textContent='↑ Replace';
+    replaceBtn.addEventListener('click',()=>openTrackModal(tObj,'replace'));
+    const recordBtn=document.createElement('button');
+    recordBtn.className='btn btn-secondary btn-sm';
+    recordBtn.title='Record new audio'; recordBtn.textContent='⏺ Record';
+    recordBtn.addEventListener('click',()=>openTrackModal(tObj,'record'));
+    btnWrap.appendChild(playBtn); btnWrap.appendChild(replaceBtn); btnWrap.appendChild(recordBtn);
+    actionTd.appendChild(btnWrap);
+    tr.appendChild(orderTd); tr.appendChild(nameTd); tr.appendChild(actionTd);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+// ── CHECK FOR SYNC (Drive scan + diff) ────────────────────────────────────────
+async function checkForSync(){
+  setLoading('Reading Drive folders…');
+  try{
     const topQ=`'${COLLECTIONS_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
     const topRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(topQ)}&fields=files(id,name)&orderBy=name&pageSize=200`);
     const topFolders=topRes.files||[];
@@ -645,7 +854,6 @@ async function loadAll(){
     directColFolders.forEach(f=>driveFolders.push({...f,version:'',versionFolderId:null}));
     driveFolders.sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
 
-    // 2. Read audio files in each collection folder
     setLoading('Reading audio tracks…');
     driveFiles={};
     await Promise.all(driveFolders.map(async folder=>{
@@ -659,42 +867,18 @@ async function loadAll(){
       driveFiles[folder.id]=audioFiles;
     }));
 
-    // 3. Read Master Sheet
-    setLoading('Reading Master Sheet…');
-    const [colsData,tracksData]=await Promise.all([
-      sheetsGet('Collections!A:Z'),
-      sheetsGet('Tracks!A:Z')
-    ]);
-
-    const cols=parseSheet(colsData);
-    sheetCollections=cols.rows.map((r,i)=>({
-      rowIndex:i+1, // 1-based offset from header
-      colId:cols.get(r,'CollectionID'),
-      name:cols.get(r,'CollectionName'),
-      folderId:cols.get(r,'DriveFolderID'),
-      version:cols.get(r,'Version')||''
-    })).filter(c=>c.colId);
-
-    const trks=parseSheet(tracksData);
-    sheetTracks=trks.rows.map((r,i)=>({
-      rowIndex:i+1,
-      trackId:trks.get(r,'TrackID'),
-      colId:trks.get(r,'CollectionID'),
-      name:trks.get(r,'TrackName'),
-      fileId:trks.get(r,'DriveFileID'),
-      order:parseInt(trks.get(r,'TrackOrder'))||999
-    })).filter(t=>t.fileId);
-
-    // 4. Compute diff
+    // Refresh master sheet data too (so diff is against latest)
+    await loadMasterSheet();
     computeDiff();
 
     setView('main');
-    initTabs();
+    // Show sync view
+    document.getElementById('ms-view').style.display='none';
+    document.getElementById('sync-view').style.display='block';
     renderAll();
-    // Students load on demand when tab is clicked
   }catch(e){
-    setView('signin');
-    showError('signin-error','Could not load data: '+e.message);
+    setView('main');
+    toast('Could not check for sync: '+e.message,'error');
   }
 }
 
@@ -1022,18 +1206,13 @@ function renderCollections(){
         } else {
           const btnWrap=document.createElement('div');
           btnWrap.style.cssText='display:flex;gap:5px;justify-content:flex-end;';
-          const replaceBtn=document.createElement('button');
-          replaceBtn.className='btn btn-secondary btn-sm';
-          replaceBtn.title='Replace with a file';
-          replaceBtn.textContent='↑ Replace';
-          replaceBtn.addEventListener('click',()=>openTrackModal(track,'replace'));
-          const recordBtn=document.createElement('button');
-          recordBtn.className='btn btn-secondary btn-sm';
-          recordBtn.title='Record new audio';
-          recordBtn.textContent='⏺ Record';
-          recordBtn.addEventListener('click',()=>openTrackModal(track,'record'));
-          btnWrap.appendChild(replaceBtn);
-          btnWrap.appendChild(recordBtn);
+          const playBtn=document.createElement('button');
+          playBtn.className='btn btn-secondary btn-sm da-play-btn';
+          playBtn.dataset.fileId=track.fileId;
+          playBtn.title='Play / pause this track';
+          playBtn.textContent=(currentlyPlayingFileId===track.fileId&&!audioPlayer.paused)?'⏸':'▶';
+          playBtn.addEventListener('click',()=>toggleMsTrackPlay({fileId:track.fileId,name:track.displayName},{name:col.displayName}));
+          btnWrap.appendChild(playBtn);
           actionTd.appendChild(btnWrap);
         }
 
@@ -1624,9 +1803,76 @@ document.getElementById('track-modal-overlay').addEventListener('click',e=>{
   if(e.target===document.getElementById('track-modal-overlay')) closeTrackModal();
 });
 
+// ── AUDIO PLAYBACK ────────────────────────────────────────────────────────────
+const audioPlayer=document.getElementById('da-audio');
+let daPlayQueue=[];
+let daQueueIndex=-1;
+let currentlyPlayingFileId=null;
+
+async function daPlayFile(fileId, trackName, collectionName){
+  currentlyPlayingFileId=fileId;
+  try{
+    const res=await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,{headers:{Authorization:'Bearer '+accessToken}});
+    if(!res.ok) throw new Error('Drive '+res.status);
+    const blob=await res.blob();
+    audioPlayer.src=URL.createObjectURL(blob);
+    audioPlayer.play().catch(()=>{});
+  }catch(e){ toast('Could not play: '+e.message,'error'); return; }
+  document.getElementById('da-now-track').textContent=trackName||'—';
+  document.getElementById('da-now-col').textContent=collectionName||'';
+  const badge=document.getElementById('da-queue-badge');
+  if(daPlayQueue.length>1){ badge.textContent=`${daQueueIndex+1} / ${daPlayQueue.length}`; badge.style.display='inline'; }
+  else badge.style.display='none';
+  document.getElementById('da-player-bar').classList.add('show');
+  document.body.classList.add('has-player');
+  refreshDaPlayButtons();
+}
+
+function toggleMsTrackPlay(track, col){
+  if(currentlyPlayingFileId===track.fileId&&!audioPlayer.paused){ audioPlayer.pause(); refreshDaPlayButtons(); return; }
+  if(currentlyPlayingFileId===track.fileId&&audioPlayer.paused&&audioPlayer.src){ audioPlayer.play().catch(()=>{}); refreshDaPlayButtons(); return; }
+  daPlayQueue=[{fileId:track.fileId,name:track.name,_colName:col?col.name:''}];
+  daQueueIndex=0;
+  daPlayFile(track.fileId, track.name, col?col.name:'');
+}
+
+function startMsQueue(col, tracks){
+  daPlayQueue=tracks.map(t=>({fileId:t.fileId,name:t.name,_colName:col.name}));
+  daQueueIndex=0;
+  const first=daPlayQueue[0];
+  daPlayFile(first.fileId, first.name, col.name);
+}
+
+function refreshDaPlayButtons(){
+  document.querySelectorAll('.da-play-btn').forEach(btn=>{
+    const fid=btn.dataset.fileId;
+    btn.textContent=(currentlyPlayingFileId===fid&&!audioPlayer.paused)?'⏸':'▶';
+  });
+  // Highlight playing row in MS view
+  document.querySelectorAll('.ms-track-table tr').forEach(tr=>tr.classList.remove('playing'));
+}
+
+audioPlayer.addEventListener('ended',()=>{
+  if(daQueueIndex<daPlayQueue.length-1){
+    daQueueIndex++;
+    const item=daPlayQueue[daQueueIndex];
+    daPlayFile(item.fileId, item.name, item._colName||'');
+  } else { currentlyPlayingFileId=null; refreshDaPlayButtons(); }
+});
+audioPlayer.addEventListener('play',refreshDaPlayButtons);
+audioPlayer.addEventListener('pause',refreshDaPlayButtons);
+document.getElementById('da-player-close').addEventListener('click',()=>{
+  audioPlayer.pause(); audioPlayer.src=''; currentlyPlayingFileId=null;
+  document.getElementById('da-player-bar').classList.remove('show');
+  document.body.classList.remove('has-player');
+  refreshDaPlayButtons();
+});
+
 // ── WIRE UP ───────────────────────────────────────────────────────────────────
 document.getElementById('sync-all-btn').addEventListener('click',syncAll);
-document.getElementById('refresh-btn').addEventListener('click',loadAll);
+document.getElementById('ms-refresh-btn').addEventListener('click',async()=>{ setLoading('Refreshing…'); await loadMasterSheet(); setView('main'); showMasterView(); });
+document.getElementById('ms-check-sync-btn').addEventListener('click',checkForSync);
+document.getElementById('sync-back-btn').addEventListener('click',()=>{ setView('main'); showMasterView(); });
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 // Set app name from config
