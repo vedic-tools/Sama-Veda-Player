@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Sama Veda Learning App — Configuration
 // Update this file when deploying for a new group.
-// All three apps (index.html, admin.html, drive-admin.html) read from here.
+// All apps (index.html, class-admin.html, group-admin.html) read from here.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const APP_CONFIG = {

@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sama Veda — Group Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --saffron:#C45E1A; --saffron-lt:#F5E6D8; --saffron-dk:#9E4A12;
+    --ink:#1C1A16; --ink-mid:#4A4640; --ink-soft:#8A857C;
+    --parchment:#FAF7F2; --parchment-d:#F0EBE1; --white:#FFFFFF;
+    --danger:#C0392B; --danger-lt:#FDECEA;
+    --success:#2E7D32; --success-lt:#E8F5E9;
+    --warning:#B07800; --warning-lt:#FFF8E1;
+    --info:#1A56A4; --info-lt:#EEF4FF;
+    --new:#6B21A8; --new-lt:#F3E8FF;
+    --info:#1A56A4; --info-lt:#EEF4FF;
+    --border:rgba(28,26,22,0.12); --border-md:rgba(28,26,22,0.22);
+    --radius:10px; --radius-lg:16px;
+    --sans:'Inter',system-ui,sans-serif; --serif:'Crimson Pro',Georgia,serif;
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      --saffron:#E07830; --saffron-lt:#2E1E0E; --saffron-dk:#F09050;
+      --ink:#F0EBE1; --ink-mid:#C0B8AC; --ink-soft:#7A7570;
+      --parchment:#1A1816; --parchment-d:#141210; --white:#201E1A;
+      --danger:#EF5350; --danger-lt:#2A1010;
+      --success:#66BB6A; --success-lt:#0A2010;
+      --warning:#FFD54F; --warning-lt:#1A1400;
+      --info:#6B9FE4; --info-lt:#0A1A3A;
+      --new:#C084FC; --new-lt:#1A0A2A;
+      --info:#6B9FE4; --info-lt:#0A1A3A;
+      --border:rgba(240,235,225,0.10); --border-md:rgba(240,235,225,0.20);
+    }
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--sans);background:var(--parchment);color:var(--ink);min-height:100vh;padding-bottom:3rem;}
+
+  /* HEADER */
+  #site-header{background:var(--white);border-bottom:1px solid var(--border);padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:30;}
+  .logo{font-family:var(--serif);font-size:20px;font-weight:300;color:var(--ink);display:flex;align-items:center;gap:8px;}
+  .logo-dot{color:var(--saffron);font-size:26px;}
+  .logo-sub{font-size:12px;color:var(--ink-soft);font-family:var(--sans);font-weight:400;margin-left:4px;}
+  #user-area{display:flex;align-items:center;gap:10px;}
+  #user-email{font-size:12px;color:var(--ink-soft);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none;}
+  #logout-btn{font-family:var(--sans);font-size:12px;color:var(--ink-soft);background:none;border:1px solid var(--border-md);border-radius:6px;padding:4px 10px;cursor:pointer;display:none;transition:all 0.15s;}
+  #logout-btn:hover{color:var(--saffron);border-color:var(--saffron);background:var(--saffron-lt);}
+
+  /* PAGE */
+  #page{max-width:780px;margin:0 auto;padding:1.5rem 1.25rem;}
+
+  /* VIEWS */
+  .view{display:none;}
+  .view.active{display:block;}
+  #signin-view.active{display:flex;flex-direction:column;align-items:center;padding:4rem 1rem;text-align:center;}
+  #loading-view.active{display:flex;flex-direction:column;align-items:center;padding:5rem 1rem;gap:12px;}
+  #main-view.active{display:grid;gap:1.25rem;}
+
+  /* SIGN-IN */
+  .view-icon{font-size:44px;margin-bottom:1rem;opacity:0.8;}
+  .view-title{font-family:var(--serif);font-size:26px;font-weight:300;font-style:italic;margin-bottom:0.5rem;}
+  .view-sub{font-size:14px;color:var(--ink-soft);margin-bottom:2rem;max-width:380px;line-height:1.6;}
+
+  /* LOADING */
+  .spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--saffron);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-text{font-size:14px;color:var(--ink-soft);}
+
+  /* BUTTONS */
+  .btn{font-family:var(--sans);font-size:13px;font-weight:500;border-radius:var(--radius);padding:0 16px;height:38px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;border:none;white-space:nowrap;}
+  .btn-primary{background:var(--saffron);color:#fff;}
+  .btn-primary:hover{background:var(--saffron-dk);}
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+  .btn-secondary{background:var(--white);color:var(--ink);border:1px solid var(--border-md);}
+  .btn-secondary:hover{background:var(--parchment-d);}
+  .btn-success{background:var(--success-lt);color:var(--success);border:1px solid rgba(46,125,50,0.25);}
+  .btn-success:hover{background:var(--success);color:#fff;}
+  .btn-success:disabled{opacity:0.4;cursor:not-allowed;}
+  .btn-danger{background:var(--danger-lt);color:var(--danger);border:1px solid rgba(192,57,43,0.2);}
+  .btn-danger:hover{background:var(--danger);color:#fff;}
+  .btn-sm{height:28px;font-size:12px;padding:0 10px;border-radius:6px;}
+  .btn-lg{height:44px;font-size:15px;padding:0 28px;}
+
+  /* ERROR */
+  .error-text{display:none;font-size:13px;color:var(--danger);background:var(--danger-lt);border:1px solid rgba(192,57,43,0.2);border-radius:var(--radius);padding:10px 14px;margin-top:10px;line-height:1.5;}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--parchment);font-size:13px;border-radius:var(--radius);padding:10px 18px;z-index:100;opacity:0;transition:opacity 0.2s;pointer-events:none;white-space:nowrap;}
+  #toast.show{opacity:1;}
+  #toast.error{background:var(--danger);}
+  #toast.success{background:var(--success);}
+
+  /* STATUS BADGES */
+  .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;border-radius:20px;padding:2px 8px;white-space:nowrap;}
+  .badge-synced{background:var(--success-lt);color:var(--success);}
+  .badge-new{background:var(--new-lt);color:var(--new);}
+  .badge-renamed{background:var(--warning-lt);color:var(--warning);}
+  .badge-missing{background:var(--danger-lt);color:var(--danger);}
+  .badge-count{background:var(--parchment-d);color:var(--ink-soft);}
+
+  /* SUMMARY BAR */
+  #summary-bar{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .summary-stat{display:flex;align-items:center;gap:6px;font-size:13px;}
+  .summary-label{color:var(--ink-soft);}
+  .summary-val{font-weight:500;}
+  .summary-sep{color:var(--border-md);font-size:18px;}
+  #sync-all-btn{margin-left:auto;}
+
+  /* PANEL */
+  .panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+  .view:not(.active){display:none!important;}
+  .panel-header{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .panel-title{font-family:var(--serif);font-size:18px;font-weight:400;flex:1;min-width:0;display:flex;align-items:center;gap:8px;}
+  .panel-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+
+  /* COLLECTION NAME EDIT */
+  .col-name-wrap{display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
+  .editable-name{font-family:var(--serif);font-size:17px;background:transparent;border:1px solid transparent;border-radius:6px;padding:3px 7px;color:var(--ink);outline:none;min-width:0;flex:1;transition:border-color 0.15s,background 0.15s;}
+  .editable-name:hover{border-color:var(--border-md);background:var(--parchment);}
+  .editable-name:focus{border-color:var(--saffron);background:var(--white);box-shadow:0 0 0 3px var(--saffron-lt);}
+  .save-name-btn{display:none;height:26px;font-size:11px;padding:0 8px;}
+
+  /* TRACK TABLE */
+  .track-table{width:100%;border-collapse:collapse;}
+  .track-table th{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-soft);padding:8px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--parchment);}
+  .track-table td{padding:9px 14px;font-size:14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .track-table tr:last-child td{border-bottom:none;}
+  .track-table tbody tr:hover td{background:var(--parchment);}
+  .track-table tr.track-missing td{opacity:0.6;}
+  .track-table tr.track-missing{background:var(--danger-lt);}
+  .track-table tr.track-new{background:var(--new-lt);}
+  .track-table tr.track-renamed{background:var(--warning-lt);}
+  .order-cell{color:var(--ink-soft);font-size:12px;width:36px;}
+  .name-cell{width:45%;}
+  .status-cell{width:110px;}
+  .action-cell{text-align:right;width:80px;}
+
+  /* INLINE EDITABLE */
+  .track-name-input{font-family:var(--serif);font-size:15px;background:transparent;border:1px solid transparent;border-radius:6px;padding:2px 6px;color:var(--ink);outline:none;width:100%;transition:border-color 0.15s,background 0.15s;}
+  .track-name-input:hover{border-color:var(--border-md);background:var(--parchment);}
+  .track-name-input:focus{border-color:var(--saffron);background:var(--white);box-shadow:0 0 0 2px var(--saffron-lt);}
+
+  /* EMPTY */
+  .empty-block{padding:2rem;text-align:center;color:var(--ink-soft);font-size:14px;}
+  .empty-title{font-family:var(--serif);font-size:18px;font-style:italic;color:var(--ink-mid);margin-bottom:6px;}
+
+  /* PENDING CHANGES BANNER */
+  .pending-banner{background:var(--warning-lt);border-top:1px solid rgba(176,120,0,0.2);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--warning);}
+  .pending-banner.hidden{display:none;}
+
+  /* REPLACE/RECORD MODAL */
+  #track-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:50;align-items:center;justify-content:center;padding:1rem;}
+  #track-modal-overlay.show{display:flex;}
+  #track-modal{background:var(--white);border-radius:var(--radius-lg);padding:1.5rem;width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px;}
+  .tm-title{font-family:var(--serif);font-size:20px;font-weight:400;}
+  .tm-track-name{font-size:13px;color:var(--ink-soft);margin-top:-8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tm-tabs{display:flex;gap:2px;background:var(--parchment-d);border-radius:var(--radius);padding:3px;}
+  .tm-tab{font-family:var(--sans);font-size:13px;font-weight:500;flex:1;height:32px;border:none;border-radius:calc(var(--radius) - 3px);cursor:pointer;background:transparent;color:var(--ink-soft);transition:all 0.15s;}
+  .tm-tab.active{background:var(--white);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+
+  /* Replace panel */
+  .tm-replace-panel,.tm-record-panel{display:none;}
+  .tm-replace-panel.active,.tm-record-panel.active{display:flex;flex-direction:column;gap:12px;}
+  .tm-drop-zone{border:2px dashed var(--border-md);border-radius:var(--radius);padding:2rem 1rem;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--parchment);}
+  .tm-drop-zone:hover,.tm-drop-zone.drag-over{border-color:var(--saffron);background:var(--saffron-lt);}
+  .tm-drop-icon{font-size:28px;margin-bottom:8px;}
+  .tm-drop-text{font-size:14px;color:var(--ink-mid);}
+  .tm-drop-hint{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+  .tm-file-selected{background:var(--success-lt);border:1px solid rgba(46,125,50,0.2);border-radius:var(--radius);padding:10px 12px;font-size:13px;color:var(--success);display:none;align-items:center;gap:8px;}
+  #tm-file-input{display:none;}
+
+  /* Record panel */
+  .tm-record-status{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--parchment);border-radius:var(--radius);font-size:14px;}
+  .tm-rec-dot{width:10px;height:10px;border-radius:50%;background:var(--ink-soft);flex-shrink:0;}
+  .tm-rec-dot.recording{background:var(--danger);animation:recpulse 1s ease-in-out infinite;}
+  @keyframes recpulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  .tm-rec-label{flex:1;color:var(--ink-mid);}
+  .tm-rec-timer{font-variant-numeric:tabular-nums;font-weight:500;color:var(--ink);min-width:40px;text-align:right;}
+  .tm-preview-wrap{display:none;flex-direction:column;gap:6px;}
+  .tm-preview-label{font-size:12px;color:var(--ink-soft);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;}
+  .tm-preview-audio{width:100%;height:32px;accent-color:var(--saffron);}
+  .tm-format-note{font-size:11px;color:var(--ink-soft);background:var(--parchment);border-radius:6px;padding:6px 10px;line-height:1.5;}
+
+  /* Modal actions */
+  .tm-actions{display:flex;gap:8px;padding-top:4px;}
+  .tm-error{display:none;font-size:13px;color:var(--danger);background:var(--danger-lt);border:1px solid rgba(192,57,43,0.2);border-radius:var(--radius);padding:8px 12px;line-height:1.5;}
+
+  @media(max-width:600px){
+    #user-email{display:none!important;}
+    .track-table th:nth-child(3),.track-table td:nth-child(3){display:none;}
+    #sync-all-btn span{display:none;}
+  }
+
+  /* STUDENTS PANEL */
+  .student-table{width:100%;border-collapse:collapse;}
+  .student-table th{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-soft);padding:8px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--parchment);}
+  .student-table td{padding:9px 14px;font-size:14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .student-table tr:last-child td{border-bottom:none;}
+  .student-table tbody tr:hover td{background:var(--parchment);}
+  .student-userid{font-weight:500;}
+  .student-class{font-size:12px;color:var(--ink-soft);}
+  .force-badge{font-size:11px;font-weight:500;background:var(--warning-lt);color:var(--warning);border-radius:20px;padding:2px 7px;}
+  .add-student-form{background:var(--parchment);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px;}
+  .add-student-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+  .add-student-grid .full-width{grid-column:1/-1;}
+  .field-label-sm{font-size:11px;font-weight:500;color:var(--ink-mid);text-transform:uppercase;letter-spacing:0.04em;display:block;margin-bottom:4px;}
+  input[type="text"].student-input,input[type="password"].student-input,select.student-input{font-family:var(--sans);font-size:13px;width:100%;height:36px;border:1px solid var(--border-md);border-radius:var(--radius);background:var(--white);color:var(--ink);padding:0 10px;outline:none;transition:border-color 0.15s;appearance:none;-webkit-appearance:none;background-image:none;}
+  select.student-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238A857C' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+  input.student-input:focus,select.student-input:focus{border-color:var(--saffron);box-shadow:0 0 0 2px var(--saffron-lt);}
+  @media(max-width:540px){.add-student-grid{grid-template-columns:1fr;}}
+
+  /* TABS */
+  #tab-bar{display:flex;gap:2px;background:var(--parchment-d);border-radius:var(--radius-lg);padding:3px;margin-bottom:1.25rem;width:fit-content;}
+  .tab-btn{font-family:var(--sans);font-size:13px;font-weight:500;height:36px;padding:0 20px;border:none;border-radius:calc(var(--radius-lg) - 3px);cursor:pointer;transition:all 0.15s;background:transparent;color:var(--ink-soft);display:flex;align-items:center;gap:7px;}
+  .tab-btn.active{background:var(--white);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+  .tab-btn:hover:not(.active){background:var(--white);color:var(--ink-mid);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:grid;gap:1.25rem;}
+
+  /* ── MASTER SHEET VIEW ── */
+  #ms-collection-select{font-family:var(--sans);font-size:14px;height:40px;border:1px solid var(--border-md);border-radius:var(--radius);background:var(--white);color:var(--ink);padding:0 32px 0 12px;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238A857C' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer;}
+  #ms-collection-select:focus{border-color:var(--saffron);box-shadow:0 0 0 3px var(--saffron-lt);}
+  .ms-col-header{display:flex;align-items:center;gap:12px;padding:13px 16px;background:var(--parchment);border:1px solid var(--border);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
+  .ms-col-name{font-family:var(--serif);font-size:18px;flex:1;}
+  .ms-track-table{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg);overflow:hidden;}
+  .ms-track-table td{padding:9px 14px;font-size:14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .ms-track-table tr:last-child td{border-bottom:none;}
+  .ms-track-table tbody tr:hover td{background:var(--parchment);}
+  .ms-track-table tr.playing td{background:var(--saffron-lt);}
+  .ms-order-cell{color:var(--ink-soft);font-size:12px;width:40px;}
+  .ms-name-cell{font-family:var(--serif);font-size:16px;}
+  .ms-action-cell{text-align:right;width:200px;}
+  .ms-empty{padding:2rem;text-align:center;color:var(--ink-soft);font-size:14px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);}
+
+  /* ── AUDIO PLAYER BAR ── */
+  #da-player-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);z-index:25;padding:10px 1.25rem;box-shadow:0 -2px 12px rgba(0,0,0,0.06);}
+  #da-player-bar.show{display:block;}
+  #da-player-inner{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:7px;}
+  #da-now-row{display:flex;align-items:center;gap:10px;}
+  #da-now-pip{width:8px;height:8px;border-radius:50%;background:var(--saffron);flex-shrink:0;animation:dapulse 1.8s ease-in-out infinite;}
+  @keyframes dapulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.75);}}
+  #da-now-text{flex:1;min-width:0;}
+  #da-now-track{font-family:var(--serif);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
+  #da-now-col{font-size:11px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #da-queue-badge{font-size:11px;color:var(--ink-soft);flex-shrink:0;background:var(--parchment-d);border-radius:20px;padding:2px 8px;display:none;}
+  #da-player-close{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:16px;padding:0 4px;flex-shrink:0;opacity:0.6;}
+  #da-player-close:hover{opacity:1;}
+  #da-audio{width:100%;height:30px;display:block;accent-color:var(--saffron);}
+  body.has-player{padding-bottom:100px;}
+</style>
+</head>
+<body>
+
+<header id="site-header">
+  <div class="logo">
+    <span class="logo-dot">॰</span>
+    <span id="app-name-drive">Sama Veda</span>
+    <span class="logo-sub">Group Admin</span>
+  </div>
+  <div id="user-area">
+    <span id="user-email"></span>
+    <button id="logout-btn">Sign out</button>
+  </div>
+</header>
+
+<div id="page">
+
+  <!-- Sign-in -->
+  <div id="signin-view" class="view">
+    <div class="view-icon">🗄️</div>
+    <div class="view-title">Master Sheet Manager</div>
+    <p class="view-sub">Sign in with the group admin account to manage collections, tracks, and students.</p>
+    <button class="btn btn-primary btn-lg" id="signin-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
+      Sign in with Google
+    </button>
+    <div class="error-text" id="signin-error"></div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-view" class="view">
+    <div class="spinner"></div>
+    <p class="loading-text" id="loading-text">Loading…</p>
+  </div>
+
+  <!-- Main -->
+  <div id="main-view" class="view">
+
+    <!-- Tab bar -->
+    <div id="tab-bar">
+      <button class="tab-btn active" id="tab-collections-btn">📚 Collections &amp; Tracks</button>
+      <button class="tab-btn" id="tab-students-btn">👤 Students</button>
+    </div>
+
+    <!-- Collections tab panel -->
+    <div class="tab-panel active" id="tab-collections">
+
+      <!-- ── MASTER SHEET VIEW (fast, default) ── -->
+      <div id="ms-view">
+        <div id="ms-toolbar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:1.25rem;">
+          <div style="flex:1;min-width:220px;">
+            <select id="ms-collection-select" style="width:100%;">
+              <option value="">— Select a collection —</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="ms-refresh-btn">↻ Refresh</button>
+          <button class="btn btn-success btn-sm" id="ms-check-sync-btn">🔍 Check for sync</button>
+        </div>
+        <div id="ms-tracks-container"></div>
+      </div>
+
+      <!-- ── SYNC VIEW (Drive comparison) ── -->
+      <div id="sync-view" style="display:none;">
+        <div id="summary-bar">
+          <div class="summary-stat"><span class="summary-label">Collections</span><span class="summary-val" id="stat-collections">—</span></div>
+          <span class="summary-sep">·</span>
+          <div class="summary-stat"><span class="summary-label">Tracks</span><span class="summary-val" id="stat-tracks">—</span></div>
+          <span class="summary-sep">·</span>
+          <div class="summary-stat" id="stat-changes-wrap" style="display:none;">
+            <span class="summary-label">Pending</span>
+            <span class="summary-val" id="stat-changes" style="color:var(--warning);">—</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-left:auto;">
+            <button class="btn btn-secondary btn-sm" id="sync-back-btn">← Back</button>
+            <button class="btn btn-success" id="sync-all-btn" disabled>
+              ✓ <span>Sync all changes</span>
+            </button>
+          </div>
+        </div>
+        <div id="collections-container"></div>
+      </div>
+
+    </div><!-- end tab-collections -->
+
+    <!-- Students tab panel -->
+    <div class="tab-panel" id="tab-students">
+
+    <!-- Students Panel -->
+    <div class="panel" id="students-panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          👤 Students
+          <span class="panel-badge" id="student-count">0</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="refresh-students-btn">↻ Refresh</button>
+      </div>
+      <div class="panel-body">
+
+        <!-- Add student form -->
+        <div class="add-student-form">
+          <span style="font-size:12px;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:0.05em;">Add new student</span>
+          <div class="add-student-grid">
+            <div>
+              <label class="field-label-sm">User ID</label>
+              <input type="text" class="student-input" id="new-userid" placeholder="e.g. student001" autocapitalize="none" />
+            </div>
+            <div>
+              <label class="field-label-sm">Display Name</label>
+              <input type="text" class="student-input" id="new-displayname" placeholder="e.g. Ravi" />
+            </div>
+            <div>
+              <label class="field-label-sm">Class Sheet</label>
+              <select class="student-input" id="new-classsheet">
+                <option value="">— Select class —</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-success btn-sm" id="add-student-btn">+ Add Student</button>
+            <span style="font-size:11px;color:var(--ink-soft);">Student can sign in immediately using their User ID.</span>
+          </div>
+          <div class="error-text" id="add-student-error"></div>
+        </div>
+
+        <!-- Student table -->
+        <div id="student-table-wrap">
+          <div class="empty-block" id="no-students-msg">
+            <div class="empty-title">No students yet</div>
+            <p>Add students above. Once added, they can sign in using the shared Google account and their User ID + password.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    </div><!-- end tab-students -->
+
+  </div>
+</div>
+
+<!-- Audio Player Bar -->
+<div id="da-player-bar">
+  <div id="da-player-inner">
+    <div id="da-now-row">
+      <div id="da-now-pip"></div>
+      <div id="da-now-text">
+        <div id="da-now-track">—</div>
+        <div id="da-now-col">—</div>
+      </div>
+      <span id="da-queue-badge"></span>
+      <button id="da-player-close" title="Close player">✕</button>
+    </div>
+    <audio id="da-audio" controls></audio>
+  </div>
+</div>
+
+<!-- Replace / Record Modal -->
+<div id="track-modal-overlay">
+  <div id="track-modal">
+    <div class="tm-title">Update Audio Track</div>
+    <div class="tm-track-name" id="tm-track-name">—</div>
+
+    <!-- Tabs -->
+    <div class="tm-tabs">
+      <button class="tm-tab active" id="tm-tab-replace">📁 Replace with file</button>
+      <button class="tm-tab" id="tm-tab-record">⏺ Record new audio</button>
+    </div>
+
+    <!-- Replace panel -->
+    <div class="tm-replace-panel active" id="tm-replace-panel">
+      <div class="tm-drop-zone" id="tm-drop-zone">
+        <div class="tm-drop-icon">🎵</div>
+        <div class="tm-drop-text">Click to choose an audio file</div>
+        <div class="tm-drop-hint">or drag and drop here · MP3, M4A, WAV, OGG supported</div>
+      </div>
+      <div class="tm-file-selected" id="tm-file-selected">
+        <span>✓</span><span id="tm-file-name"></span>
+      </div>
+      <input type="file" id="tm-file-input" accept="audio/*" />
+    </div>
+
+    <!-- Record panel -->
+    <div class="tm-record-panel" id="tm-record-panel">
+      <div class="tm-record-status">
+        <div class="tm-rec-dot" id="tm-rec-dot"></div>
+        <span class="tm-rec-label" id="tm-rec-label">Ready to record</span>
+        <span class="tm-rec-timer" id="tm-rec-timer">0:00</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-danger" id="tm-record-btn" style="flex:1;">⏺ Start recording</button>
+        <button class="btn btn-secondary" id="tm-stop-btn" style="flex:1;" disabled>⏹ Stop</button>
+      </div>
+      <div class="tm-preview-wrap" id="tm-preview-wrap">
+        <span class="tm-preview-label">Preview recording</span>
+        <audio class="tm-preview-audio" id="tm-preview-audio" controls></audio>
+      </div>
+      <div class="tm-format-note">
+        ℹ️ Recordings are saved in your browser's native audio format (WebM or MP4). Playback works in all modern browsers.
+      </div>
+    </div>
+
+    <div class="tm-error" id="tm-error"></div>
+
+    <div class="tm-actions">
+      <button class="btn btn-primary" id="tm-save-btn" disabled style="flex:1;">💾 Save & Replace</button>
+      <button class="btn btn-secondary" id="tm-cancel-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const CLIENT_ID            = APP_CONFIG.CLIENT_ID;
+const MASTER_SHEET_ID      = APP_CONFIG.MASTER_SHEET_ID;
+const CLASSES_FOLDER_ID    = APP_CONFIG.CLASSES_FOLDER_ID;
+const COLLECTIONS_FOLDER_ID= APP_CONFIG.COLLECTIONS_FOLDER_ID;
+const SCOPES = [
+  'https://www.googleapis.com/auth/spreadsheets',
+  'https://www.googleapis.com/auth/drive'  // full drive needed: read folders, write file content, manage permissions
+].join(' ');
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let accessToken = null;
+let tokenClient = null;
+let allStudents  = [];   // [{rowIndex, userId, displayName, classSheetId, forcePasswordChange}]
+let classSheetsList = []; // [{id, name}] for student class assignment dropdown
+
+// Drive state
+let driveFolders = []; // [{id, name}] — collection folders from Drive
+let driveFiles   = {}; // {folderId: [{id, name, mimeType}]} — tracks per folder
+
+// Sheet state
+let sheetCollections = []; // [{rowIndex, colId, name, folderId}]
+let sheetTracks      = []; // [{rowIndex, trackId, colId, name, fileId, order}]
+
+// Diff state — computed from drive + sheet
+// diffData: [{
+//   folderId, folderName (from Drive),
+//   sheetColId, sheetColName, sheetRowIndex,
+//   status: 'synced'|'new'|'renamed'|'missing',
+//   displayName (editable),
+//   tracks: [{
+//     fileId, fileName (from Drive),
+//     sheetTrackId, sheetTrackName, sheetRowIndex,
+//     status: 'synced'|'new'|'renamed'|'missing',
+//     displayName (editable), order
+//   }]
+// }]
+let diffData = [];
+
+// Pending name edits: {type:'col'|'track', id:folderId|fileId, name}
+let pendingNameEdits = {};
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function esc(s){ const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+function stripExt(n){ return n.replace(/\.[^/.]+$/,''); }
+function makeId(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,8); }
+
+function makeGetter(headers){
+  const lo=headers.map(h=>h.trim().toLowerCase());
+  return (row,key)=>{ const i=lo.indexOf(key.toLowerCase()); return i>=0?(row[i]||'').toString().trim():''; };
+}
+function parseSheet(data){
+  const rows=data.values||[];
+  if(!rows.length) return {get:()=>'',rows:[]};
+  return {get:makeGetter(rows[0]),rows:rows.slice(1).filter(r=>r.some(c=>c))};
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='show'+(type?' '+type:'');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.className='',3500);
+}
+
+// ── VIEWS ─────────────────────────────────────────────────────────────────────
+function setView(name){
+  ['signin','loading','main'].forEach(v=>document.getElementById(v+'-view').classList.toggle('active',v===name));
+}
+function setLoading(msg){ document.getElementById('loading-text').textContent=msg||'Loading…'; setView('loading'); }
+function showError(id,msg){ const el=document.getElementById(id); if(!el)return; el.textContent=msg; el.style.display=msg?'block':'none'; }
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+function waitForGoogle(){
+  return new Promise((resolve,reject)=>{
+    let tries=0;
+    const t=setInterval(()=>{
+      if(window.google?.accounts?.oauth2){ clearInterval(t); resolve(); }
+      else if(++tries>120){ clearInterval(t); reject(new Error('Google sign-in library did not load.')); }
+    },100);
+  });
+}
+
+async function initAuth(){
+  try{
+    await waitForGoogle();
+    tokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:CLIENT_ID, scope:SCOPES,
+      callback:async(resp)=>{
+        if(resp.error){ showError('signin-error','Sign-in failed: '+resp.error); return; }
+        accessToken=resp.access_token;
+        try{
+          const r=await fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?access_token='+accessToken);
+          const d=await r.json();
+          const eEl=document.getElementById('user-email');
+          eEl.textContent=d.email||''; eEl.style.display=d.email?'block':'none';
+          document.getElementById('logout-btn').style.display='block';
+        }catch(_){}
+        showError('signin-error','');
+        await loadAll();
+      }
+    });
+    document.getElementById('signin-btn').addEventListener('click',()=>{
+      showError('signin-error','');
+      try{ tokenClient.requestAccessToken(); }
+      catch(e){ showError('signin-error','Could not open sign-in: '+e.message); }
+    });
+    document.getElementById('logout-btn').addEventListener('click',()=>{
+      if(accessToken) google.accounts.oauth2.revoke(accessToken,()=>{});
+      accessToken=null;
+      document.getElementById('user-email').style.display='none';
+      document.getElementById('logout-btn').style.display='none';
+      setView('signin');
+    });
+  }catch(e){ showError('signin-error',e.message); }
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function driveFetch(url){
+  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  if(!res.ok) throw new Error('Drive '+res.status+': '+(await res.text()).slice(0,300));
+  return res.json();
+}
+async function sheetsGet(range){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SHEET_ID}/values/${encodeURIComponent(range)}`;
+  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  if(!res.ok) throw new Error('Sheets read '+res.status+': '+(await res.text()).slice(0,300));
+  return res.json();
+}
+async function sheetsGetMeta(){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SHEET_ID}?fields=sheets.properties`;
+  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  if(!res.ok) throw new Error('Metadata '+res.status);
+  return res.json();
+}
+async function sheetsAppend(range,values){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
+  const res=await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({values})});
+  if(!res.ok) throw new Error('Append '+res.status+': '+(await res.text()).slice(0,300));
+  return res.json();
+}
+async function sheetsBatchUpdate(requests){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SHEET_ID}:batchUpdate`;
+  const res=await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({requests})});
+  if(!res.ok) throw new Error('BatchUpdate '+res.status+': '+(await res.text()).slice(0,300));
+  return res.json();
+}
+async function sheetsUpdateCell(range,value){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=RAW`;
+  const res=await fetch(url,{method:'PUT',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({values:[[value]]})});
+  if(!res.ok) throw new Error('Update '+res.status+': '+(await res.text()).slice(0,300));
+  return res.json();
+}
+async function getTabId(tabName){
+  const meta=await sheetsGetMeta();
+  const sheet=(meta.sheets||[]).find(s=>s.properties.title===tabName);
+  if(!sheet) throw new Error(`Tab "${tabName}" not found`);
+  return sheet.properties.sheetId;
+}
+async function deleteRows(tabId,indexes){
+  // indexes: array of 0-based row indexes (after header), sorted descending
+  const sorted=[...indexes].sort((a,b)=>b-a);
+  const requests=sorted.map(i=>({deleteDimension:{range:{sheetId:tabId,dimension:'ROWS',startIndex:i,endIndex:i+1}}}));
+  if(requests.length) await sheetsBatchUpdate(requests);
+}
+
+// ── ENSURE HEADERS ────────────────────────────────────────────────────────────
+async function ensureTab(tabName){
+  // Create tab if it doesn't exist
+  const meta=await sheetsGetMeta();
+  const exists=(meta.sheets||[]).some(s=>s.properties.title===tabName);
+  if(!exists){
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SHEET_ID}:batchUpdate`;
+    await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({requests:[{addSheet:{properties:{title:tabName}}}]})});
+  }
+}
+
+async function ensureHeaders(){
+  const tryEnsure=async(tab,headers)=>{
+    await ensureTab(tab);
+    try{
+      const d=await sheetsGet(`${tab}!A1:Z1`);
+      if(!d.values?.[0]?.[0]) await sheetsAppend(`${tab}!A:Z`,[headers]);
+    }catch(_){ await sheetsAppend(`${tab}!A:Z`,[headers]); }
+  };
+  await tryEnsure('Collections',['CollectionID','CollectionName','DriveFolderID','Version']);
+  await tryEnsure('Tracks',['TrackID','CollectionID','TrackName','DriveFileID','TrackOrder']);
+  await tryEnsure('Students',['UserID','ClassSheetID','DisplayName']);
+}
+
+// ── PERMISSION CHECK ─────────────────────────────────────────────────────────
+async function checkWriteAccess(){
+  // Check if signed-in user has edit access to Master Sheet via Drive API
+  const url=`https://www.googleapis.com/drive/v3/files/${MASTER_SHEET_ID}?fields=capabilities`;
+  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  if(!res.ok) return false; // Can't read file at all — no access
+  const data=await res.json();
+  return data.capabilities?.canEdit===true;
+}
+
+// ── LOAD ALL ──────────────────────────────────────────────────────────────────
+// Fast default load — Master Sheet only, no Drive scan
+async function loadAll(){
+  setLoading('Checking permissions…');
+  pendingNameEdits={};
+  try{
+    const canEdit=await checkWriteAccess();
+    if(!canEdit){
+      setView('signin');
+      showError('signin-error',
+        '⛔ Access denied. This tool requires edit access to the Master Sheet. ' +
+        'Please sign in with the group admin account. ' +
+        'If you believe this is an error, contact your administrator.'
+      );
+      return;
+    }
+    await ensureHeaders();
+    await loadMasterSheet();
+
+    setView('main');
+    initTabs();
+    showMasterView();
+  }catch(e){
+    setView('signin');
+    showError('signin-error','Could not load data: '+e.message);
+  }
+}
+
+// Read Collections + Tracks tabs from the Master Sheet into memory
+async function loadMasterSheet(){
+  setLoading('Reading Master Sheet…');
+  const [colsData,tracksData]=await Promise.all([
+    sheetsGet('Collections!A:Z'),
+    sheetsGet('Tracks!A:Z')
+  ]);
+  const cols=parseSheet(colsData);
+  sheetCollections=cols.rows.map((r,i)=>({
+    rowIndex:i+1,
+    colId:cols.get(r,'CollectionID'),
+    name:cols.get(r,'CollectionName'),
+    folderId:cols.get(r,'DriveFolderID'),
+    version:cols.get(r,'Version')||''
+  })).filter(c=>c.colId);
+  const trks=parseSheet(tracksData);
+  sheetTracks=trks.rows.map((r,i)=>({
+    rowIndex:i+1,
+    trackId:trks.get(r,'TrackID'),
+    colId:trks.get(r,'CollectionID'),
+    name:trks.get(r,'TrackName'),
+    fileId:trks.get(r,'DriveFileID'),
+    order:parseInt(trks.get(r,'TrackOrder'))||999
+  })).filter(t=>t.fileId);
+}
+
+// ── MASTER SHEET VIEW (dropdown + tracks) ─────────────────────────────────────
+function msVersionRank(v){
+  if(!v) return 2;
+  if(v.toLowerCase()===APP_CONFIG.VERSION_LEARNING.toLowerCase()) return 0;
+  if(v.toLowerCase()===APP_CONFIG.VERSION_FINAL.toLowerCase()) return 1;
+  return 2;
+}
+
+function showMasterView(){
+  document.getElementById('ms-view').style.display='block';
+  document.getElementById('sync-view').style.display='none';
+  renderMasterDropdown();
+}
+
+function renderMasterDropdown(){
+  const sel=document.getElementById('ms-collection-select');
+  const prev=sel.value;
+  // Sort: Learning first, then Final, then others; alphabetical within
+  const sorted=[...sheetCollections].sort((a,b)=>{
+    const ra=msVersionRank(a.version), rb=msVersionRank(b.version);
+    if(ra!==rb) return ra-rb;
+    return a.name.localeCompare(b.name,undefined,{numeric:true});
+  });
+  sel.innerHTML='<option value="">— Select a collection —</option>';
+  // Group with optgroups by version
+  const groups={};
+  groups[APP_CONFIG.VERSION_LEARNING]=[]; groups[APP_CONFIG.VERSION_FINAL]=[]; groups['Other']=[];
+  sorted.forEach(c=>{
+    const v=msVersionRank(c.version)===0?APP_CONFIG.VERSION_LEARNING:msVersionRank(c.version)===1?APP_CONFIG.VERSION_FINAL:'Other';
+    groups[v].push(c);
+  });
+  [[APP_CONFIG.VERSION_LEARNING,APP_CONFIG.VERSION_LEARNING_LABEL],[APP_CONFIG.VERSION_FINAL,APP_CONFIG.VERSION_FINAL_LABEL],['Other','Other']].forEach(([key,label])=>{
+    if(!groups[key]||!groups[key].length) return;
+    const og=document.createElement('optgroup'); og.label=label;
+    groups[key].forEach(c=>{ const o=document.createElement('option'); o.value=c.colId; o.textContent=c.name; og.appendChild(o); });
+    sel.appendChild(og);
+  });
+  if(prev) sel.value=prev;
+  sel.onchange=()=>renderMasterTracks(sel.value);
+  renderMasterTracks(sel.value);
+}
+
+function renderMasterTracks(colId){
+  const container=document.getElementById('ms-tracks-container');
+  container.innerHTML='';
+  if(!colId){
+    container.innerHTML='<div class="ms-empty">Select a collection above to view its tracks.</div>';
+    return;
+  }
+  const col=sheetCollections.find(c=>c.colId===colId);
+  if(!col){ container.innerHTML='<div class="ms-empty">Collection not found.</div>'; return; }
+  const tracks=sheetTracks.filter(t=>t.colId===colId).sort((a,b)=>a.order-b.order);
+
+  // Header with collection name + Play all
+  const header=document.createElement('div');
+  header.className='ms-col-header';
+  const vBadge=col.version?`<span class="badge" style="background:${msVersionRank(col.version)===0?'var(--info-lt)':'var(--success-lt)'};color:${msVersionRank(col.version)===0?'var(--info)':'var(--success)'};">${msVersionRank(col.version)===0?APP_CONFIG.VERSION_LEARNING_LABEL:APP_CONFIG.VERSION_FINAL_LABEL}</span>`:'';
+  header.innerHTML=`<span class="ms-col-name">${esc(col.name)}</span> ${vBadge} <span style="font-size:12px;color:var(--ink-soft);">${tracks.length} track${tracks.length===1?'':'s'}</span>`;
+  if(tracks.length>0){
+    const playAllBtn=document.createElement('button');
+    playAllBtn.className='btn btn-secondary btn-sm';
+    playAllBtn.textContent='▶ Play all';
+    playAllBtn.title='Play all tracks in this collection';
+    playAllBtn.addEventListener('click',()=>startMsQueue(col,tracks));
+    header.appendChild(playAllBtn);
+  }
+  container.appendChild(header);
+
+  if(tracks.length===0){
+    const empty=document.createElement('div');
+    empty.className='ms-empty';
+    empty.style.borderRadius='0 0 var(--radius-lg) var(--radius-lg)';
+    empty.textContent='No tracks in this collection.';
+    container.appendChild(empty);
+    return;
+  }
+
+  const table=document.createElement('table');
+  table.className='ms-track-table';
+  const tbody=document.createElement('tbody');
+  tracks.forEach(track=>{
+    const tr=document.createElement('tr');
+    if(currentlyPlayingFileId===track.fileId) tr.className='playing';
+    const orderTd=document.createElement('td'); orderTd.className='ms-order-cell'; orderTd.textContent=track.order;
+    const nameTd=document.createElement('td'); nameTd.className='ms-name-cell'; nameTd.textContent=track.name;
+    const actionTd=document.createElement('td'); actionTd.className='ms-action-cell';
+    const btnWrap=document.createElement('div');
+    btnWrap.style.cssText='display:flex;gap:5px;justify-content:flex-end;';
+    // Build a track object compatible with the modal/playback helpers
+    const tObj={fileId:track.fileId, name:track.name, displayName:track.name};
+    const playBtn=document.createElement('button');
+    playBtn.className='btn btn-secondary btn-sm da-play-btn';
+    playBtn.dataset.fileId=track.fileId;
+    playBtn.title='Play / pause';
+    playBtn.textContent=(currentlyPlayingFileId===track.fileId&&!audioPlayer.paused)?'⏸':'▶';
+    playBtn.addEventListener('click',()=>toggleMsTrackPlay(tObj,col));
+    const replaceBtn=document.createElement('button');
+    replaceBtn.className='btn btn-secondary btn-sm';
+    replaceBtn.title='Replace with a file'; replaceBtn.textContent='↑ Replace';
+    replaceBtn.addEventListener('click',()=>openTrackModal(tObj,'replace'));
+    const recordBtn=document.createElement('button');
+    recordBtn.className='btn btn-secondary btn-sm';
+    recordBtn.title='Record new audio'; recordBtn.textContent='⏺ Record';
+    recordBtn.addEventListener('click',()=>openTrackModal(tObj,'record'));
+    btnWrap.appendChild(playBtn); btnWrap.appendChild(replaceBtn); btnWrap.appendChild(recordBtn);
+    actionTd.appendChild(btnWrap);
+    tr.appendChild(orderTd); tr.appendChild(nameTd); tr.appendChild(actionTd);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+// ── CHECK FOR SYNC (Drive scan + diff) ────────────────────────────────────────
+async function checkForSync(){
+  setLoading('Reading Drive folders…');
+  try{
+    const topQ=`'${COLLECTIONS_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+    const topRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(topQ)}&fields=files(id,name)&orderBy=name&pageSize=200`);
+    const topFolders=topRes.files||[];
+    const VERSION_NAMES=[APP_CONFIG.VERSION_LEARNING.toLowerCase(),APP_CONFIG.VERSION_FINAL.toLowerCase()];
+    const versionFolders=topFolders.filter(f=>VERSION_NAMES.includes(f.name.toLowerCase()));
+    const directColFolders=topFolders.filter(f=>!VERSION_NAMES.includes(f.name.toLowerCase()));
+    driveFolders=[];
+    await Promise.all(versionFolders.map(async vf=>{
+      const version=vf.name.toLowerCase()===APP_CONFIG.VERSION_LEARNING.toLowerCase()?APP_CONFIG.VERSION_LEARNING:APP_CONFIG.VERSION_FINAL;
+      const subQ=`'${vf.id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+      const subRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(subQ)}&fields=files(id,name)&orderBy=name&pageSize=200`);
+      (subRes.files||[]).forEach(f=>driveFolders.push({...f,version,versionFolderId:vf.id}));
+    }));
+    directColFolders.forEach(f=>driveFolders.push({...f,version:'',versionFolderId:null}));
+    driveFolders.sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+
+    setLoading('Reading audio tracks…');
+    driveFiles={};
+    await Promise.all(driveFolders.map(async folder=>{
+      const trackQ=`'${folder.id}' in parents and trashed=false`;
+      const trackRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(trackQ)}&fields=files(id,name,mimeType)&pageSize=500`);
+      const audioFiles=(trackRes.files||[]).filter(f=>
+        f.mimeType.startsWith('audio/')||
+        f.mimeType==='video/mp4'||
+        /\.(mp3|m4a|wav|ogg|aac|flac|opus)$/i.test(f.name)
+      ).sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+      driveFiles[folder.id]=audioFiles;
+    }));
+
+    // Refresh master sheet data too (so diff is against latest)
+    await loadMasterSheet();
+    computeDiff();
+
+    setView('main');
+    // Show sync view
+    document.getElementById('ms-view').style.display='none';
+    document.getElementById('sync-view').style.display='block';
+    renderAll();
+  }catch(e){
+    setView('main');
+    toast('Could not check for sync: '+e.message,'error');
+  }
+}
+
+// ── COMPUTE DIFF ──────────────────────────────────────────────────────────────
+function computeDiff(){
+  diffData=[];
+
+  // Index sheet collections by folderId
+  const sheetColByFolder={};
+  sheetCollections.forEach(c=>{ if(c.folderId) sheetColByFolder[c.folderId]=c; });
+
+  // Index sheet tracks by fileId
+  const sheetTrackByFile={};
+  sheetTracks.forEach(t=>{ if(t.fileId) sheetTrackByFile[t.fileId]=t; });
+
+  // Process Drive folders
+  const processedFolderIds=new Set();
+  driveFolders.forEach(folder=>{
+    processedFolderIds.add(folder.id);
+    const sheetCol=sheetColByFolder[folder.id];
+    const colStatus=sheetCol
+      ?(sheetCol.name!==stripExt(folder.name)&&sheetCol.name!==folder.name?'renamed':'synced')
+      :'new';
+    const colVersion=folder.version||'';
+
+    const tracks=[];
+    const files=driveFiles[folder.id]||[];
+    const processedFileIds=new Set();
+
+    files.forEach((file,idx)=>{
+      processedFileIds.add(file.id);
+      const sheetTrack=sheetTrackByFile[file.id];
+      const driveName=stripExt(file.name);
+      const trackStatus=sheetTrack
+        ?(sheetTrack.name!==driveName?'renamed':'synced')
+        :'new';
+      tracks.push({
+        fileId:file.id,
+        fileName:file.name,
+        driveName,
+        sheetTrackId:sheetTrack?.trackId||null,
+        sheetTrackName:sheetTrack?.name||null,
+        sheetRowIndex:sheetTrack?.rowIndex||null,
+        sheetColId:sheetTrack?.colId||null,
+        status:trackStatus,
+        displayName:sheetTrack?.name||driveName,
+        order:sheetTrack?.order||(idx+1)
+      });
+    });
+
+    // Find tracks in sheet for this collection that are missing from Drive
+    if(sheetCol){
+      sheetTracks
+        .filter(t=>t.colId===sheetCol.colId&&!processedFileIds.has(t.fileId))
+        .forEach(t=>{
+          tracks.push({
+            fileId:t.fileId,
+            fileName:null,
+            driveName:null,
+            sheetTrackId:t.trackId,
+            sheetTrackName:t.name,
+            sheetRowIndex:t.rowIndex,
+            sheetColId:t.colId,
+            status:'missing',
+            displayName:t.name,
+            order:t.order
+          });
+        });
+    }
+
+    // Sort: synced/renamed first by order, then new, then missing
+    tracks.sort((a,b)=>{
+      const statusOrder={synced:0,renamed:1,new:2,missing:3};
+      if(statusOrder[a.status]!==statusOrder[b.status]) return statusOrder[a.status]-statusOrder[b.status];
+      return a.order-b.order;
+    });
+
+    diffData.push({
+      folderId:folder.id,
+      folderName:folder.name,
+      driveName:stripExt(folder.name),
+      sheetColId:sheetCol?.colId||null,
+      sheetColName:sheetCol?.name||null,
+      sheetRowIndex:sheetCol?.rowIndex||null,
+      status:colStatus,
+      version:colVersion,
+      displayName:pendingNameEdits['col_'+folder.id]||sheetCol?.name||stripExt(folder.name),
+      tracks
+    });
+  });
+
+  // Collections in sheet but missing from Drive
+  sheetCollections
+    .filter(c=>c.folderId&&!processedFolderIds.has(c.folderId))
+    .forEach(c=>{
+      const missingTracks=sheetTracks.filter(t=>t.colId===c.colId).map(t=>({
+        fileId:t.fileId, fileName:null, driveName:null,
+        sheetTrackId:t.trackId, sheetTrackName:t.name, sheetRowIndex:t.rowIndex, sheetColId:t.colId,
+        status:'missing', displayName:t.name, order:t.order
+      }));
+      diffData.push({
+        folderId:c.folderId, folderName:null, driveName:null,
+        sheetColId:c.colId, sheetColName:c.name, sheetRowIndex:c.rowIndex,
+        status:'missing',
+        displayName:c.name,
+        tracks:missingTracks
+      });
+    });
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderAll(){
+  renderSummary();
+  renderCollections();
+}
+
+function renderSummary(){
+  const totalCols=diffData.filter(c=>c.status!=='missing').length;
+  const totalTracks=diffData.flatMap(c=>c.tracks).filter(t=>t.status!=='missing').length;
+  const pending=countPendingChanges();
+
+  document.getElementById('stat-collections').textContent=totalCols;
+  document.getElementById('stat-tracks').textContent=totalTracks;
+
+  const changesWrap=document.getElementById('stat-changes-wrap');
+  const changesEl=document.getElementById('stat-changes');
+  const syncBtn=document.getElementById('sync-all-btn');
+
+  if(pending>0){
+    changesWrap.style.display='flex';
+    changesEl.textContent=pending+' change'+(pending===1?'':'s');
+    syncBtn.disabled=false;
+  } else {
+    changesWrap.style.display='none';
+    syncBtn.disabled=true;
+  }
+}
+
+function countPendingChanges(){
+  let count=0;
+  diffData.forEach(col=>{
+    if(col.status==='new'||col.status==='renamed'||col.status==='missing') count++;
+    col.tracks.forEach(t=>{ if(t.status==='new'||t.status==='renamed'||t.status==='missing') count++; });
+  });
+  // Also count pending name edits
+  count+=Object.keys(pendingNameEdits).length;
+  return count;
+}
+
+function statusBadge(status){
+  const map={
+    synced:'<span class="badge badge-synced">✓ Synced</span>',
+    new:'<span class="badge badge-new">🆕 New</span>',
+    renamed:'<span class="badge badge-renamed">✏️ Renamed</span>',
+    missing:'<span class="badge badge-missing">⚠️ Missing</span>'
+  };
+  return map[status]||'';
+}
+
+function renderCollections(){
+  const container=document.getElementById('collections-container');
+  container.innerHTML='';
+
+  if(diffData.length===0){
+    container.innerHTML='<div class="panel"><div class="empty-block"><div class="empty-title">No collections found</div><p>Add collection folders inside the Collections folder in Drive, then refresh.</p></div></div>';
+    return;
+  }
+
+  diffData.forEach((col,ci)=>{
+    const panel=document.createElement('div');
+    panel.className='panel';
+    panel.id='col-panel-'+ci;
+
+    // Panel header
+    const header=document.createElement('div');
+    header.className='panel-header';
+
+    // Editable collection name
+    const nameWrap=document.createElement('div');
+    nameWrap.className='col-name-wrap';
+    const nameInput=document.createElement('input');
+    nameInput.type='text';
+    nameInput.className='editable-name';
+    nameInput.value=col.displayName;
+    nameInput.title='Click to edit display name';
+    nameInput.disabled=col.status==='missing';
+
+    const saveNameBtn=document.createElement('button');
+    saveNameBtn.className='btn btn-primary btn-sm save-name-btn';
+    saveNameBtn.textContent='Save';
+
+    nameInput.addEventListener('input',()=>{
+      const changed=nameInput.value.trim()!==col.displayName;
+      saveNameBtn.style.display=changed?'inline-flex':'none';
+    });
+    nameInput.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){ e.preventDefault(); saveNameBtn.click(); }
+      if(e.key==='Escape'){ nameInput.value=col.displayName; saveNameBtn.style.display='none'; }
+    });
+    saveNameBtn.addEventListener('click',async()=>{
+      const newName=nameInput.value.trim();
+      if(!newName) return;
+      col.displayName=newName;
+      pendingNameEdits['col_'+col.folderId]=newName;
+      saveNameBtn.style.display='none';
+      renderSummary();
+      toast('Name queued — click "Sync all changes" to save','');
+    });
+
+    nameWrap.appendChild(nameInput);
+    nameWrap.appendChild(saveNameBtn);
+
+    const trackCount=col.tracks.filter(t=>t.status!=='missing').length;
+    const newCount=col.tracks.filter(t=>t.status==='new').length;
+    const renamedCount=col.tracks.filter(t=>t.status==='renamed').length;
+    const missingCount=col.tracks.filter(t=>t.status==='missing').length;
+
+    const metaSpan=document.createElement('span');
+    metaSpan.style.cssText='font-size:12px;color:var(--ink-soft);white-space:nowrap;';
+    let metaParts=[trackCount+' track'+(trackCount===1?'':'s')];
+    if(newCount) metaParts.push(newCount+' new');
+    if(renamedCount) metaParts.push(renamedCount+' renamed');
+    if(missingCount) metaParts.push(missingCount+' missing');
+    metaSpan.textContent=metaParts.join(' · ');
+
+    const titleDiv=document.createElement('div');
+    titleDiv.className='panel-title';
+    titleDiv.appendChild(nameWrap);
+
+    const actions=document.createElement('div');
+    actions.className='panel-actions';
+    const vBadge=col.version?`<span class="badge" style="background:${APP_CONFIG.VERSION_LEARNING===col.version?'var(--info-lt)':'var(--success-lt)'};color:${APP_CONFIG.VERSION_LEARNING===col.version?'var(--info)':'var(--success)'};">${col.version===APP_CONFIG.VERSION_LEARNING?APP_CONFIG.VERSION_LEARNING_LABEL:APP_CONFIG.VERSION_FINAL_LABEL}</span>`:'';
+    actions.innerHTML=vBadge+statusBadge(col.status);
+
+    if(col.status!=='missing'){
+      // Sync this collection button
+      const syncColBtn=document.createElement('button');
+      syncColBtn.className='btn btn-success btn-sm';
+      syncColBtn.textContent='↑ Sync';
+      syncColBtn.title='Sync only this collection';
+      const colChanges=countColChanges(col);
+      syncColBtn.disabled=colChanges===0;
+      syncColBtn.addEventListener('click',async()=>{ await syncCollection(col,ci); await loadAll(); });
+      actions.appendChild(syncColBtn);
+    } else {
+      const removeBtn=document.createElement('button');
+      removeBtn.className='btn btn-danger btn-sm';
+      removeBtn.textContent='Remove from Sheet';
+      removeBtn.addEventListener('click',()=>removeCollectionFromSheet(col));
+      actions.appendChild(removeBtn);
+    }
+
+    header.appendChild(titleDiv);
+    header.appendChild(metaSpan);
+    header.appendChild(actions);
+    panel.appendChild(header);
+
+    // Track table
+    if(col.tracks.length>0){
+      const table=document.createElement('table');
+      table.className='track-table';
+      table.innerHTML=`<thead><tr>
+        <th class="order-cell">#</th>
+        <th class="name-cell">Track Name</th>
+        <th>Drive Filename</th>
+        <th class="status-cell">Status</th>
+        <th style="width:170px;"></th>
+      </tr></thead>`;
+      const tbody=document.createElement('tbody');
+
+      col.tracks.forEach((track,ti)=>{
+        const tr=document.createElement('tr');
+        tr.className=track.status==='missing'?'track-missing':track.status==='new'?'track-new':track.status==='renamed'?'track-renamed':'';
+
+        // Order cell
+        const orderTd=document.createElement('td');
+        orderTd.className='order-cell';
+        orderTd.textContent=track.status!=='missing'?track.order:'—';
+
+        // Editable name cell
+        const nameTd=document.createElement('td');
+        nameTd.className='name-cell';
+        if(track.status!=='missing'){
+          const inp=document.createElement('input');
+          inp.type='text';
+          inp.className='track-name-input';
+          inp.value=track.displayName;
+          inp.title='Click to edit display name';
+          inp.addEventListener('change',()=>{
+            const newName=inp.value.trim()||track.driveName;
+            inp.value=newName;
+            track.displayName=newName;
+            pendingNameEdits['track_'+track.fileId]=newName;
+            renderSummary();
+            toast('Name queued — click "Sync all changes" to save','');
+          });
+          nameTd.appendChild(inp);
+        } else {
+          nameTd.innerHTML=`<span style="font-family:var(--serif);font-size:15px;">${esc(track.displayName)}</span>`;
+        }
+
+        // Drive filename cell
+        const fileTd=document.createElement('td');
+        fileTd.style.cssText='font-size:12px;color:var(--ink-soft);';
+        fileTd.textContent=track.fileName||'(file not found in Drive)';
+
+        // Status cell
+        const statusTd=document.createElement('td');
+        statusTd.className='status-cell';
+        if(track.status==='renamed'){
+          statusTd.innerHTML=statusBadge(track.status)+'<div style="font-size:10px;color:var(--ink-soft);margin-top:2px;">was: '+esc(track.sheetTrackName||'')+'</div>';
+        } else {
+          statusTd.innerHTML=statusBadge(track.status);
+        }
+
+        // Action cell
+        const actionTd=document.createElement('td');
+        actionTd.className='action-cell';
+        if(track.status==='missing'){
+          const removeBtn=document.createElement('button');
+          removeBtn.className='btn btn-danger btn-sm';
+          removeBtn.textContent='Remove';
+          removeBtn.addEventListener('click',()=>removeTrackFromSheet(track,col));
+          actionTd.appendChild(removeBtn);
+        } else {
+          const btnWrap=document.createElement('div');
+          btnWrap.style.cssText='display:flex;gap:5px;justify-content:flex-end;';
+          const playBtn=document.createElement('button');
+          playBtn.className='btn btn-secondary btn-sm da-play-btn';
+          playBtn.dataset.fileId=track.fileId;
+          playBtn.title='Play / pause this track';
+          playBtn.textContent=(currentlyPlayingFileId===track.fileId&&!audioPlayer.paused)?'⏸':'▶';
+          playBtn.addEventListener('click',()=>toggleMsTrackPlay({fileId:track.fileId,name:track.displayName},{name:col.displayName}));
+          btnWrap.appendChild(playBtn);
+          actionTd.appendChild(btnWrap);
+        }
+
+        tr.appendChild(orderTd); tr.appendChild(nameTd); tr.appendChild(fileTd);
+        tr.appendChild(statusTd); tr.appendChild(actionTd);
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      panel.appendChild(table);
+    } else {
+      const empty=document.createElement('div');
+      empty.style.cssText='padding:12px 14px;font-size:13px;color:var(--ink-soft);';
+      empty.textContent=col.status==='missing'?'Collection folder not found in Drive.':'No audio files found in this folder.';
+      panel.appendChild(empty);
+    }
+
+    container.appendChild(panel);
+  });
+}
+
+function countColChanges(col){
+  let n=0;
+  if(col.status==='new'||col.status==='renamed') n++;
+  if(pendingNameEdits['col_'+col.folderId]) n++;
+  col.tracks.forEach(t=>{
+    if(t.status==='new'||t.status==='renamed') n++;
+    if(pendingNameEdits['track_'+t.fileId]) n++;
+  });
+  return n;
+}
+
+// ── SYNC ──────────────────────────────────────────────────────────────────────
+async function syncCollection(col, ci){
+  try{
+    let colId=col.sheetColId;
+
+    // Handle collection row
+    if(col.status==='new'){
+      colId=makeId('C');
+      const name=pendingNameEdits['col_'+col.folderId]||col.displayName;
+      await sheetsAppend('Collections!A:D',[[colId,name,col.folderId,col.version||'']]);
+      delete pendingNameEdits['col_'+col.folderId];
+      // Update local state
+      col.sheetColId=colId;
+      col.sheetColName=name;
+      col.status='synced';
+    } else if(col.status==='renamed'||pendingNameEdits['col_'+col.folderId]){
+      const name=pendingNameEdits['col_'+col.folderId]||col.driveName||col.displayName;
+      // Find row in sheet — need fresh data
+      const freshCols=await sheetsGet('Collections!A:Z');
+      const fc=parseSheet(freshCols);
+      const rowIdx=fc.rows.findIndex(r=>fc.get(r,'DriveFolderID')===col.folderId);
+      if(rowIdx>=0){
+        // Update name column (B = col 2)
+        await sheetsUpdateCell(`Collections!B${rowIdx+2}`,name);
+      }
+      delete pendingNameEdits['col_'+col.folderId];
+      col.sheetColName=name;
+      col.displayName=name;
+      col.status='synced';
+    }
+
+    if(!colId) colId=col.sheetColId;
+
+    // Handle tracks
+    const newTracks=col.tracks.filter(t=>t.status==='new');
+    const renamedTracks=col.tracks.filter(t=>t.status==='renamed'||pendingNameEdits['track_'+t.fileId]);
+
+    // Add new tracks in batch
+    if(newTracks.length>0){
+      const rows=newTracks.map((t,i)=>{
+        const trackId=makeId('T');
+        const name=pendingNameEdits['track_'+t.fileId]||t.displayName;
+        t.sheetTrackId=trackId; t.sheetColId=colId; t.sheetColName=col.sheetColName;
+        t.sheetTrackName=name; t.status='synced';
+        delete pendingNameEdits['track_'+t.fileId];
+        return [trackId,colId,name,t.fileId,t.order];
+      });
+      await sheetsAppend('Tracks!A:E',rows);
+    }
+
+    // Update renamed tracks
+    if(renamedTracks.length>0){
+      const freshTrks=await sheetsGet('Tracks!A:Z');
+      const ft=parseSheet(freshTrks);
+      for(const t of renamedTracks){
+        const name=pendingNameEdits['track_'+t.fileId]||t.driveName||t.displayName;
+        const rowIdx=ft.rows.findIndex(r=>ft.get(r,'DriveFileID')===t.fileId);
+        if(rowIdx>=0){
+          await sheetsUpdateCell(`Tracks!C${rowIdx+2}`,name);
+          // Also update ColID if it was new
+          if(ft.get(ft.rows[rowIdx],'CollectionID')!==colId){
+            await sheetsUpdateCell(`Tracks!B${rowIdx+2}`,colId);
+          }
+        }
+        t.sheetTrackName=name; t.displayName=name; t.status='synced';
+        delete pendingNameEdits['track_'+t.fileId];
+      }
+    }
+
+    toast('Collection synced: '+col.displayName,'success');
+    // Note: loadAll() is NOT called here — caller (syncAll or per-collection sync) handles reload
+  }catch(e){ toast('Sync error: '+e.message,'error'); throw e; }
+}
+
+async function syncAll(){
+  document.getElementById('sync-all-btn').disabled=true;
+  try{
+    const newCols=diffData.filter(c=>c.status==='new');
+    const renamedCols=diffData.filter(c=>c.status==='renamed'||pendingNameEdits['col_'+c.folderId]);
+    const newTracks=diffData.flatMap(c=>c.tracks.filter(t=>t.status==='new').map(t=>({...t,parentCol:c})));
+    const renamedTracks=diffData.flatMap(c=>c.tracks.filter(t=>t.status==='renamed'||pendingNameEdits['track_'+t.fileId]).map(t=>({...t,parentCol:c})));
+
+    // 1. Batch append all new collection rows in ONE call
+    if(newCols.length>0){
+      const colRows=newCols.map(col=>{
+        const colId=makeId('C');
+        const name=pendingNameEdits['col_'+col.folderId]||col.displayName;
+        col.sheetColId=colId; col.sheetColName=name; col.status='synced';
+        delete pendingNameEdits['col_'+col.folderId];
+        return [colId,name,col.folderId,col.version||''];
+      });
+      await sheetsAppend('Collections!A:D',colRows);
+    }
+
+    // 2. Handle renamed collections one by one (rare operation)
+    if(renamedCols.length>0){
+      const freshCols=await sheetsGet('Collections!A:Z');
+      const fc=parseSheet(freshCols);
+      for(const col of renamedCols){
+        const name=pendingNameEdits['col_'+col.folderId]||col.driveName||col.displayName;
+        const rowIdx=fc.rows.findIndex(r=>fc.get(r,'DriveFolderID')===col.folderId);
+        if(rowIdx>=0) await sheetsUpdateCell(`Collections!B${rowIdx+2}`,name);
+        col.sheetColName=name; col.displayName=name; col.status='synced';
+        delete pendingNameEdits['col_'+col.folderId];
+      }
+    }
+
+    // 3. Batch append all new track rows in ONE call
+    if(newTracks.length>0){
+      const trackRows=newTracks.map(t=>{
+        const trackId=makeId('T');
+        const name=pendingNameEdits['track_'+t.fileId]||t.displayName;
+        const colId=t.parentCol.sheetColId;
+        t.sheetTrackId=trackId; t.status='synced';
+        delete pendingNameEdits['track_'+t.fileId];
+        return [trackId,colId,name,t.fileId,t.order];
+      });
+      await sheetsAppend('Tracks!A:E',trackRows);
+    }
+
+    // 4. Handle renamed tracks one by one (rare)
+    if(renamedTracks.length>0){
+      const freshTrks=await sheetsGet('Tracks!A:Z');
+      const ft=parseSheet(freshTrks);
+      for(const t of renamedTracks){
+        const name=pendingNameEdits['track_'+t.fileId]||t.driveName||t.displayName;
+        const rowIdx=ft.rows.findIndex(r=>ft.get(r,'DriveFileID')===t.fileId);
+        if(rowIdx>=0) await sheetsUpdateCell(`Tracks!C${rowIdx+2}`,name);
+        t.status='synced';
+        delete pendingNameEdits['track_'+t.fileId];
+      }
+    }
+
+    const total=newCols.length+renamedCols.length;
+    toast(`Synced ${total} collection${total===1?'':'s'} successfully!`,'success');
+    await loadAll();
+  }catch(e){
+    console.error('Sync error:', e);
+    toast('Sync error: '+e.message,'error');
+    document.getElementById('sync-all-btn').disabled=false;
+  }
+}
+
+async function removeCollectionFromSheet(col){
+  if(!confirm(`Remove "${col.displayName}" and all its tracks from the Master Sheet?\n\nThis does not delete anything from Google Drive.`)) return;
+  try{
+    const [colTabId,trkTabId]=await Promise.all([getTabId('Collections'),getTabId('Tracks')]);
+    const [freshCols,freshTrks]=await Promise.all([sheetsGet('Collections!A:Z'),sheetsGet('Tracks!A:Z')]);
+    const fc=parseSheet(freshCols); const ft=parseSheet(freshTrks);
+
+    // Delete track rows bottom-to-top
+    const trkIdxs=ft.rows.map((r,i)=>({i:i+1,cid:ft.get(r,'CollectionID')})).filter(x=>x.cid===col.sheetColId).map(x=>x.i).sort((a,b)=>b-a);
+    for(const ri of trkIdxs) await sheetsBatchUpdate([{deleteDimension:{range:{sheetId:trkTabId,dimension:'ROWS',startIndex:ri,endIndex:ri+1}}}]);
+
+    // Delete collection row
+    const colIdx=fc.rows.findIndex(r=>fc.get(r,'DriveFolderID')===col.folderId||fc.get(r,'CollectionID')===col.sheetColId);
+    if(colIdx>=0) await sheetsBatchUpdate([{deleteDimension:{range:{sheetId:colTabId,dimension:'ROWS',startIndex:colIdx+1,endIndex:colIdx+2}}}]);
+
+    toast('Removed from Sheet: '+col.displayName,'success');
+    await loadAll();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function removeTrackFromSheet(track,col){
+  if(!confirm(`Remove "${track.displayName}" from the Master Sheet?\n\nThis does not delete the file from Google Drive.`)) return;
+  try{
+    const trkTabId=await getTabId('Tracks');
+    const freshTrks=await sheetsGet('Tracks!A:Z');
+    const ft=parseSheet(freshTrks);
+    const rowIdx=ft.rows.findIndex(r=>ft.get(r,'DriveFileID')===track.fileId);
+    if(rowIdx>=0) await sheetsBatchUpdate([{deleteDimension:{range:{sheetId:trkTabId,dimension:'ROWS',startIndex:rowIdx+1,endIndex:rowIdx+2}}}]);
+    toast('Removed: '+track.displayName,'success');
+    await loadAll();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+
+// ── LOAD STUDENTS ─────────────────────────────────────────────────────────────
+async function loadStudents(){
+  try{
+    // Load class sheets list for the dropdown
+    await loadClassSheetsList();
+
+    const data=await sheetsGet('Students!A:Z');
+    const st=parseSheet(data);
+    allStudents=st.rows.map((r,i)=>({
+      rowIndex:i+2,
+      userId:st.get(r,'UserID'),
+      classSheetId:st.get(r,'ClassSheetID'),
+      displayName:st.get(r,'DisplayName')||st.get(r,'UserID')
+    })).filter(s=>s.userId);
+    renderStudents();
+  }catch(e){ toast('Could not load students: '+e.message,'error'); }
+}
+
+async function loadClassSheetsList(){
+  // Find all spreadsheets inside Classes folder and its subfolders
+  const folderQ=`'${CLASSES_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  const folderRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(folderQ)}&fields=files(id,name)&pageSize=100`);
+  let allSheets=[];
+  await Promise.all((folderRes.files||[]).map(async folder=>{
+    const sheetQ=`'${folder.id}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
+    const sheetRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(sheetQ)}&fields=files(id,name)&pageSize=100`);
+    (sheetRes.files||[]).forEach(f=>allSheets.push({id:f.id,name:f.name,folderName:folder.name}));
+  }));
+  classSheetsList=allSheets.sort((a,b)=>a.name.localeCompare(b.name));
+
+  // Populate the class sheet dropdown
+  const sel=document.getElementById('new-classsheet');
+  sel.innerHTML='<option value="">— Select class —</option>';
+  classSheetsList.forEach(s=>{
+    const o=document.createElement('option');
+    o.value=s.id;
+    o.textContent=s.name+(s.folderName?` (${s.folderName})`:'');
+    sel.appendChild(o);
+  });
+}
+
+function getClassSheetName(sheetId){
+  const found=classSheetsList.find(s=>s.id===sheetId);
+  return found?found.name:sheetId.slice(0,12)+'…';
+}
+
+// ── RENDER STUDENTS ───────────────────────────────────────────────────────────
+function renderStudents(){
+  const wrap=document.getElementById('student-table-wrap');
+  const noMsg=document.getElementById('no-students-msg');
+  document.getElementById('student-count').textContent=allStudents.length;
+
+  if(allStudents.length===0){
+    if(noMsg) noMsg.style.display='block';
+    // Remove existing table if any
+    const existingTable=wrap.querySelector('table');
+    if(existingTable) existingTable.remove();
+    return;
+  }
+  if(noMsg) noMsg.style.display='none';
+
+  // Build table
+  const table=document.createElement('table');
+  table.className='student-table';
+  table.innerHTML=`<thead><tr>
+    <th>User ID</th>
+    <th>Display Name</th>
+    <th>Class Sheet</th>
+    <th style="width:80px;"></th>
+  </tr></thead>`;
+  const tbody=document.createElement('tbody');
+
+  allStudents.forEach(student=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="student-userid">${esc(student.userId)}</td>
+      <td>${esc(student.displayName)}</td>
+      <td class="student-class">${esc(getClassSheetName(student.classSheetId))}</td>
+      <td style="text-align:right;">
+        <button class="btn btn-danger btn-sm delete-student-btn">Delete</button>
+      </td>
+    `;
+    tr.querySelector('.delete-student-btn').addEventListener('click',()=>deleteStudent(student));
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  const existing=wrap.querySelector('table');
+  if(existing) existing.remove();
+  wrap.appendChild(table);
+}
+
+// ── STUDENT ACTIONS ───────────────────────────────────────────────────────────
+document.getElementById('add-student-btn').addEventListener('click',async()=>{
+  const userId=document.getElementById('new-userid').value.trim();
+  const displayName=document.getElementById('new-displayname').value.trim();
+  const classSheetId=document.getElementById('new-classsheet').value;
+  showError('add-student-error','');
+
+  if(!userId){ showError('add-student-error','User ID is required.'); return; }
+  if(!classSheetId){ showError('add-student-error','Please select a class sheet.'); return; }
+
+  // Check for duplicate UserID + ClassSheetID combination
+  if(allStudents.some(s=>s.userId.toLowerCase()===userId.toLowerCase()&&s.classSheetId===classSheetId)){
+    showError('add-student-error','This student is already assigned to that class sheet.'); return;
+  }
+
+  document.getElementById('add-student-btn').disabled=true;
+  try{
+    await sheetsAppend('Students!A:C',[[userId,classSheetId,displayName||userId]]);
+    // Clear form
+    document.getElementById('new-userid').value='';
+    document.getElementById('new-displayname').value='';
+    document.getElementById('new-classsheet').value='';
+    toast('Student added: '+userId,'success');
+    await loadStudents();
+  }catch(e){ showError('add-student-error','Error adding student: '+e.message); }
+  document.getElementById('add-student-btn').disabled=false;
+});
+
+async function deleteStudent(student){
+  if(!confirm(`Delete student "${student.userId}" (${student.displayName})?\n\nThis removes their login credentials. They will no longer be able to sign in.`)) return;
+  try{
+    const tabId=await getTabId('Students');
+    // Find fresh row index
+    const fresh=await sheetsGet('Students!A:Z');
+    const ft=parseSheet(fresh);
+    const rowIdx=ft.rows.findIndex(r=>ft.get(r,'UserID')===student.userId);
+    if(rowIdx<0) throw new Error('Student row not found');
+    await sheetsBatchUpdate([{deleteDimension:{range:{sheetId:tabId,dimension:'ROWS',startIndex:rowIdx+1,endIndex:rowIdx+2}}}]);
+    toast('Deleted: '+student.userId,'success');
+    await loadStudents();
+  }catch(e){ toast('Error deleting student: '+e.message,'error'); }
+}
+
+document.getElementById('refresh-students-btn').addEventListener('click',loadStudents);
+
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function initTabs(){
+  const tabs=[
+    {btn:'tab-collections-btn', panel:'tab-collections'},
+    {btn:'tab-students-btn',    panel:'tab-students'}
+  ];
+  tabs.forEach(({btn,panel})=>{
+    document.getElementById(btn).addEventListener('click',()=>{
+      tabs.forEach(t=>{
+        document.getElementById(t.btn).classList.toggle('active',t.btn===btn);
+        document.getElementById(t.panel).classList.toggle('active',t.panel===panel);
+      });
+      // Load students when switching to students tab for the first time
+      if(panel==='tab-students'&&allStudents.length===0) loadStudents();
+    });
+  });
+}
+
+
+// ── TRACK REPLACE / RECORD MODAL ─────────────────────────────────────────────
+let currentModalTrack = null;
+let mediaRecorder      = null;
+let recordedChunks     = [];
+let recordedBlob       = null;
+let selectedFile       = null;
+let recordTimerInterval= null;
+let recordSeconds      = 0;
+
+function openTrackModal(track, mode){
+  currentModalTrack=track;
+  selectedFile=null; recordedBlob=null; recordedChunks=[];
+
+  // Reset UI
+  document.getElementById('tm-track-name').textContent=track.name;
+  document.getElementById('tm-error').style.display='none';
+  document.getElementById('tm-save-btn').disabled=true;
+  document.getElementById('tm-file-selected').style.display='none';
+  document.getElementById('tm-file-name').textContent='';
+  document.getElementById('tm-file-input').value='';
+  document.getElementById('tm-preview-wrap').style.display='none';
+  document.getElementById('tm-preview-audio').src='';
+  document.getElementById('tm-rec-dot').className='tm-rec-dot';
+  document.getElementById('tm-rec-label').textContent='Ready to record';
+  document.getElementById('tm-rec-timer').textContent='0:00';
+  document.getElementById('tm-record-btn').disabled=false;
+  document.getElementById('tm-stop-btn').disabled=true;
+  document.getElementById('tm-record-btn').textContent='⏺ Start recording';
+
+  // Set active tab
+  switchModalTab(mode);
+  document.getElementById('track-modal-overlay').classList.add('show');
+}
+
+function switchModalTab(mode){
+  ['replace','record'].forEach(m=>{
+    document.getElementById('tm-tab-'+m).classList.toggle('active',m===mode);
+    document.getElementById('tm-'+m+'-panel').classList.toggle('active',m===mode);
+  });
+  // Stop recording if switching away
+  if(mode==='replace'&&mediaRecorder&&mediaRecorder.state==='recording'){
+    mediaRecorder.stop(); stopRecordTimer();
+  }
+}
+
+function closeTrackModal(){
+  document.getElementById('track-modal-overlay').classList.remove('show');
+  if(mediaRecorder&&mediaRecorder.state==='recording'){
+    mediaRecorder.stop(); stopRecordTimer();
+  }
+  currentModalTrack=null; selectedFile=null; recordedBlob=null;
+}
+
+// ── FILE REPLACE ──────────────────────────────────────────────────────────────
+document.getElementById('tm-drop-zone').addEventListener('click',()=>{
+  document.getElementById('tm-file-input').click();
+});
+document.getElementById('tm-drop-zone').addEventListener('dragover',e=>{
+  e.preventDefault(); e.currentTarget.classList.add('drag-over');
+});
+document.getElementById('tm-drop-zone').addEventListener('dragleave',e=>{
+  e.currentTarget.classList.remove('drag-over');
+});
+document.getElementById('tm-drop-zone').addEventListener('drop',e=>{
+  e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];
+  if(file&&file.type.startsWith('audio/')) setSelectedFile(file);
+  else showModalError('Please drop an audio file.');
+});
+document.getElementById('tm-file-input').addEventListener('change',e=>{
+  const file=e.target.files[0];
+  if(file) setSelectedFile(file);
+});
+
+function setSelectedFile(file){
+  selectedFile=file;
+  document.getElementById('tm-file-name').textContent=file.name+' ('+formatSize(file.size)+')';
+  document.getElementById('tm-file-selected').style.display='flex';
+  document.getElementById('tm-save-btn').disabled=false;
+  document.getElementById('tm-error').style.display='none';
+}
+
+function formatSize(bytes){
+  if(bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB';
+  return (bytes/(1024*1024)).toFixed(1)+' MB';
+}
+
+// ── RECORDING ─────────────────────────────────────────────────────────────────
+document.getElementById('tm-record-btn').addEventListener('click',async()=>{
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    recordedChunks=[];
+    recordedBlob=null;
+    mediaRecorder=new MediaRecorder(stream);
+    mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop=()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      const mimeType=mediaRecorder.mimeType||'audio/webm';
+      recordedBlob=new Blob(recordedChunks,{type:mimeType});
+      const url=URL.createObjectURL(recordedBlob);
+      document.getElementById('tm-preview-audio').src=url;
+      document.getElementById('tm-preview-wrap').style.display='flex';
+      document.getElementById('tm-rec-dot').className='tm-rec-dot';
+      document.getElementById('tm-rec-label').textContent='Recording complete — preview below';
+      document.getElementById('tm-record-btn').textContent='⏺ Record again';
+      document.getElementById('tm-record-btn').disabled=false;
+      document.getElementById('tm-stop-btn').disabled=true;
+      document.getElementById('tm-save-btn').disabled=false;
+    };
+    mediaRecorder.start(100);
+    recordSeconds=0;
+    startRecordTimer();
+    document.getElementById('tm-rec-dot').className='tm-rec-dot recording';
+    document.getElementById('tm-rec-label').textContent='Recording…';
+    document.getElementById('tm-record-btn').disabled=true;
+    document.getElementById('tm-stop-btn').disabled=false;
+    document.getElementById('tm-preview-wrap').style.display='none';
+    document.getElementById('tm-save-btn').disabled=true;
+  }catch(e){
+    showModalError('Microphone access denied. Please allow microphone access and try again.');
+  }
+});
+
+document.getElementById('tm-stop-btn').addEventListener('click',()=>{
+  if(mediaRecorder&&mediaRecorder.state==='recording'){
+    mediaRecorder.stop(); stopRecordTimer();
+  }
+});
+
+function startRecordTimer(){
+  stopRecordTimer();
+  recordTimerInterval=setInterval(()=>{
+    recordSeconds++;
+    const m=Math.floor(recordSeconds/60);
+    const s=recordSeconds%60;
+    document.getElementById('tm-rec-timer').textContent=m+':'+(s<10?'0':'')+s;
+  },1000);
+}
+function stopRecordTimer(){ clearInterval(recordTimerInterval); }
+
+// ── SAVE (both modes) ─────────────────────────────────────────────────────────
+document.getElementById('tm-save-btn').addEventListener('click',async()=>{
+  const blob=recordedBlob||selectedFile;
+  if(!blob||!currentModalTrack){ showModalError('Nothing to save.'); return; }
+
+  document.getElementById('tm-save-btn').disabled=true;
+  document.getElementById('tm-save-btn').textContent='Saving…';
+  document.getElementById('tm-error').style.display='none';
+
+  try{
+    await replaceTrackFile(currentModalTrack.fileId, blob,
+      selectedFile?selectedFile.name:currentModalTrack.name,
+      blob.type||'audio/webm'
+    );
+    toast('Track replaced: '+currentModalTrack.name,'success');
+    closeTrackModal();
+  }catch(e){
+    showModalError('Could not save: '+e.message);
+    document.getElementById('tm-save-btn').disabled=false;
+    document.getElementById('tm-save-btn').textContent='💾 Save & Replace';
+  }
+});
+
+async function replaceTrackFile(fileId, blob, filename, mimeType){
+  // Use Drive API files.update with multipart upload to replace file content
+  // while preserving the file ID, name, and all sharing permissions
+  const boundary='sama_veda_boundary_'+Date.now();
+  const metadata=JSON.stringify({name:filename});
+
+  // Build multipart body
+  const metaPart=`--${boundary}
+Content-Type: application/json; charset=UTF-8
+
+${metadata}
+`;
+  const dataPart=`--${boundary}
+Content-Type: ${mimeType}
+
+`;
+  const closing=`
+--${boundary}--`;
+
+  // Combine into single ArrayBuffer
+  const encoder=new TextEncoder();
+  const metaBytes=encoder.encode(metaPart);
+  const dataBytes=encoder.encode(dataPart);
+  const closeBytes=encoder.encode(closing);
+  const blobBytes=await blob.arrayBuffer();
+
+  const combined=new Uint8Array(metaBytes.length+dataBytes.length+blobBytes.byteLength+closeBytes.length);
+  let offset=0;
+  combined.set(metaBytes,offset); offset+=metaBytes.length;
+  combined.set(dataBytes,offset); offset+=dataBytes.length;
+  combined.set(new Uint8Array(blobBytes),offset); offset+=blobBytes.byteLength;
+  combined.set(closeBytes,offset);
+
+  const url=`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`;
+  const res=await fetch(url,{
+    method:'PATCH',
+    headers:{
+      Authorization:'Bearer '+accessToken,
+      'Content-Type':`multipart/related; boundary=${boundary}`
+    },
+    body:combined
+  });
+  if(!res.ok) throw new Error('Drive update '+res.status+': '+(await res.text()).slice(0,200));
+  return res.json();
+}
+
+function showModalError(msg){
+  const el=document.getElementById('tm-error');
+  el.textContent=msg; el.style.display='block';
+}
+
+// Tab switching
+document.getElementById('tm-tab-replace').addEventListener('click',()=>switchModalTab('replace'));
+document.getElementById('tm-tab-record').addEventListener('click',()=>switchModalTab('record'));
+
+// Cancel and overlay click
+document.getElementById('tm-cancel-btn').addEventListener('click',closeTrackModal);
+document.getElementById('track-modal-overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('track-modal-overlay')) closeTrackModal();
+});
+
+// ── AUDIO PLAYBACK ────────────────────────────────────────────────────────────
+const audioPlayer=document.getElementById('da-audio');
+let daPlayQueue=[];
+let daQueueIndex=-1;
+let currentlyPlayingFileId=null;
+
+async function daPlayFile(fileId, trackName, collectionName){
+  currentlyPlayingFileId=fileId;
+  try{
+    const res=await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,{headers:{Authorization:'Bearer '+accessToken}});
+    if(!res.ok) throw new Error('Drive '+res.status);
+    const blob=await res.blob();
+    audioPlayer.src=URL.createObjectURL(blob);
+    audioPlayer.play().catch(()=>{});
+  }catch(e){ toast('Could not play: '+e.message,'error'); return; }
+  document.getElementById('da-now-track').textContent=trackName||'—';
+  document.getElementById('da-now-col').textContent=collectionName||'';
+  const badge=document.getElementById('da-queue-badge');
+  if(daPlayQueue.length>1){ badge.textContent=`${daQueueIndex+1} / ${daPlayQueue.length}`; badge.style.display='inline'; }
+  else badge.style.display='none';
+  document.getElementById('da-player-bar').classList.add('show');
+  document.body.classList.add('has-player');
+  refreshDaPlayButtons();
+}
+
+function toggleMsTrackPlay(track, col){
+  if(currentlyPlayingFileId===track.fileId&&!audioPlayer.paused){ audioPlayer.pause(); refreshDaPlayButtons(); return; }
+  if(currentlyPlayingFileId===track.fileId&&audioPlayer.paused&&audioPlayer.src){ audioPlayer.play().catch(()=>{}); refreshDaPlayButtons(); return; }
+  daPlayQueue=[{fileId:track.fileId,name:track.name,_colName:col?col.name:''}];
+  daQueueIndex=0;
+  daPlayFile(track.fileId, track.name, col?col.name:'');
+}
+
+function startMsQueue(col, tracks){
+  daPlayQueue=tracks.map(t=>({fileId:t.fileId,name:t.name,_colName:col.name}));
+  daQueueIndex=0;
+  const first=daPlayQueue[0];
+  daPlayFile(first.fileId, first.name, col.name);
+}
+
+function refreshDaPlayButtons(){
+  document.querySelectorAll('.da-play-btn').forEach(btn=>{
+    const fid=btn.dataset.fileId;
+    btn.textContent=(currentlyPlayingFileId===fid&&!audioPlayer.paused)?'⏸':'▶';
+  });
+  // Highlight playing row in MS view
+  document.querySelectorAll('.ms-track-table tr').forEach(tr=>tr.classList.remove('playing'));
+}
+
+audioPlayer.addEventListener('ended',()=>{
+  if(daQueueIndex<daPlayQueue.length-1){
+    daQueueIndex++;
+    const item=daPlayQueue[daQueueIndex];
+    daPlayFile(item.fileId, item.name, item._colName||'');
+  } else { currentlyPlayingFileId=null; refreshDaPlayButtons(); }
+});
+audioPlayer.addEventListener('play',refreshDaPlayButtons);
+audioPlayer.addEventListener('pause',refreshDaPlayButtons);
+document.getElementById('da-player-close').addEventListener('click',()=>{
+  audioPlayer.pause(); audioPlayer.src=''; currentlyPlayingFileId=null;
+  document.getElementById('da-player-bar').classList.remove('show');
+  document.body.classList.remove('has-player');
+  refreshDaPlayButtons();
+});
+
+// ── WIRE UP ───────────────────────────────────────────────────────────────────
+document.getElementById('sync-all-btn').addEventListener('click',syncAll);
+document.getElementById('ms-refresh-btn').addEventListener('click',async()=>{ setLoading('Refreshing…'); await loadMasterSheet(); setView('main'); showMasterView(); });
+document.getElementById('ms-check-sync-btn').addEventListener('click',checkForSync);
+document.getElementById('sync-back-btn').addEventListener('click',()=>{ setView('main'); showMasterView(); });
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+// Set app name from config
+document.title=APP_CONFIG.APP_NAME+' — Group Admin';
+const dnEl=document.getElementById('app-name-drive');
+if(dnEl) dnEl.textContent=APP_CONFIG.APP_NAME;
+
+(async function boot(){
+  setView('signin');
+  await initAuth();
+})();
+</script>
+</body>
+</html>
