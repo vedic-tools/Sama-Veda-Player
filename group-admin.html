@@ -223,6 +223,9 @@
   /* ── MASTER SHEET VIEW ── */
   #ms-collection-select{font-family:var(--sans);font-size:14px;height:40px;border:1px solid var(--border-md);border-radius:var(--radius);background:var(--white);color:var(--ink);padding:0 32px 0 12px;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238A857C' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer;}
   #ms-collection-select:focus{border-color:var(--saffron);box-shadow:0 0 0 3px var(--saffron-lt);}
+  /* Make the version group headers stand out in the dropdown */
+  #ms-collection-select optgroup{font-family:var(--serif);font-size:14px;font-weight:700;font-style:normal;color:var(--saffron);background:var(--parchment);padding:4px 0;letter-spacing:0.02em;}
+  #ms-collection-select option{font-family:var(--sans);font-size:14px;font-weight:400;color:var(--ink);padding:4px 8px;}
   .ms-col-header{display:flex;align-items:center;gap:12px;padding:13px 16px;background:var(--parchment);border:1px solid var(--border);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
   .ms-col-name{font-family:var(--serif);font-size:18px;flex:1;}
   .ms-track-table{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg);overflow:hidden;}
@@ -250,6 +253,42 @@
   #da-player-close:hover{opacity:1;}
   #da-audio{width:100%;height:30px;display:block;accent-color:var(--saffron);}
   body.has-player{padding-bottom:100px;}
+
+  /* ── NEW COLLECTION MODAL ── */
+  #nc-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;}
+  #nc-overlay.show{display:flex;}
+  #nc-modal{background:var(--white);border-radius:var(--radius-lg);padding:1.5rem;width:100%;max-width:560px;display:flex;flex-direction:column;gap:16px;max-height:90vh;overflow-y:auto;margin:auto;}
+  .nc-title{font-family:var(--serif);font-size:22px;font-weight:400;}
+  .nc-field-label{font-size:12px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;display:block;}
+  #nc-name-input{width:100%;height:42px;border:1px solid var(--border-md);border-radius:var(--radius);padding:0 12px;font-family:var(--sans);font-size:15px;outline:none;}
+  #nc-name-input:focus{border-color:var(--saffron);box-shadow:0 0 0 3px var(--saffron-lt);}
+  .nc-version-row{display:flex;gap:10px;}
+  .nc-version-opt{flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border-md);border-radius:var(--radius);cursor:pointer;font-size:14px;transition:all 0.15s;}
+  .nc-version-opt:hover{border-color:var(--saffron);}
+  .nc-version-opt.selected{border-color:var(--saffron);background:var(--saffron-lt);font-weight:500;}
+  .nc-version-opt input{accent-color:var(--saffron);}
+
+  .nc-tracks-label{display:flex;align-items:center;justify-content:space-between;}
+  .nc-track-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}
+  .nc-track-num{font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums;width:26px;flex-shrink:0;}
+  .nc-track-name{flex:1;height:36px;border:1px solid var(--border-md);border-radius:var(--radius);padding:0 10px;font-family:var(--sans);font-size:14px;outline:none;min-width:0;}
+  .nc-track-name:focus{border-color:var(--saffron);box-shadow:0 0 0 3px var(--saffron-lt);}
+  .nc-track-rec-btn{flex-shrink:0;}
+  .nc-track-status{font-size:11px;flex-shrink:0;width:56px;text-align:center;}
+  .nc-track-status.recorded{color:var(--success);font-weight:500;}
+  .nc-track-status.empty{color:var(--ink-soft);}
+  .nc-track-del{background:none;border:none;cursor:pointer;font-size:15px;opacity:0.5;flex-shrink:0;padding:2px 4px;}
+  .nc-track-del:hover{opacity:1;}
+  #nc-add-track-btn{align-self:flex-start;}
+  .nc-hint{font-size:12px;color:var(--ink-soft);background:var(--parchment);border-radius:6px;padding:8px 10px;line-height:1.5;}
+  .nc-error{display:none;font-size:13px;color:var(--danger);background:var(--danger-lt);border:1px solid rgba(192,57,43,0.2);border-radius:var(--radius);padding:8px 12px;}
+  .nc-actions{display:flex;gap:8px;justify-content:flex-end;padding-top:4px;}
+
+  /* Recording sub-state inside a track row */
+  .nc-rec-active{display:flex;align-items:center;gap:8px;flex:1;font-size:13px;color:var(--ink-mid);}
+  .nc-rec-dot{width:9px;height:9px;border-radius:50%;background:var(--danger);animation:ncpulse 1s ease-in-out infinite;flex-shrink:0;}
+  @keyframes ncpulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  .nc-rec-timer{font-variant-numeric:tabular-nums;font-weight:500;}
 </style>
 </head>
 <body>
@@ -306,6 +345,7 @@
               <option value="">— Select a collection —</option>
             </select>
           </div>
+          <button class="btn btn-primary btn-sm" id="ms-new-collection-btn">+ New Collection</button>
           <button class="btn btn-secondary btn-sm" id="ms-refresh-btn">↻ Refresh</button>
           <button class="btn btn-success btn-sm" id="ms-check-sync-btn">🔍 Check for sync</button>
         </div>
@@ -395,6 +435,51 @@
 
     </div><!-- end tab-students -->
 
+  </div>
+</div>
+
+<!-- New Collection Modal -->
+<div id="nc-overlay">
+  <div id="nc-modal">
+    <div class="nc-title">Create New Collection</div>
+
+    <div>
+      <label class="nc-field-label">Collection name</label>
+      <input type="text" id="nc-name-input" placeholder="e.g. Purushasuktam" />
+    </div>
+
+    <div>
+      <label class="nc-field-label">Version</label>
+      <div class="nc-version-row">
+        <label class="nc-version-opt" id="nc-version-learning">
+          <input type="radio" name="nc-version" value="learning" />
+          <span id="nc-version-learning-label">🎓 Learning</span>
+        </label>
+        <label class="nc-version-opt selected" id="nc-version-final">
+          <input type="radio" name="nc-version" value="final" checked />
+          <span id="nc-version-final-label">✓ Final</span>
+        </label>
+      </div>
+    </div>
+
+    <div>
+      <div class="nc-tracks-label" style="margin-bottom:6px;">
+        <label class="nc-field-label" style="margin-bottom:0;">Tracks</label>
+      </div>
+      <div id="nc-tracks-list"></div>
+      <button class="btn btn-secondary btn-sm" id="nc-add-track-btn" style="margin-top:10px;">+ Add track</button>
+    </div>
+
+    <div class="nc-hint">
+      ℹ️ Tracks are numbered automatically (01_, 02_…) by their order. Record audio for each track using the ⏺ button. Tracks left empty are skipped — you can record them later. On save, the collection folder and audio files are created in Drive and synced to the Master Sheet.
+    </div>
+
+    <div class="nc-error" id="nc-error"></div>
+
+    <div class="nc-actions">
+      <button class="btn btn-secondary" id="nc-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="nc-save-btn">Save collection</button>
+    </div>
   </div>
 </div>
 
@@ -518,6 +603,37 @@ let pendingNameEdits = {};
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function esc(s){ const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
 function stripExt(n){ return n.replace(/\.[^/.]+$/,''); }
+
+// Parse a track filename following the convention: Collection-##-Title
+// Returns { title, order }. Falls back gracefully if the convention isn't followed.
+//   "Purushasuktam-01-Anuvakam 1.m4a"  → { title:"Anuvakam 1", order:1 }
+//   "01-Anuvakam 1.m4a"                → { title:"Anuvakam 1", order:1 }   (short prefix)
+//   "Purushasuktam-01_Anuvakam 1.m4a"  → { title:"Anuvakam 1", order:1 }   (legacy underscore)
+//   "Anuvakam 1.m4a"                   → { title:"Anuvakam 1", order:null }
+function parseTrackName(fileName){
+  const base=stripExt(fileName);
+  // Primary convention: split on the numeric sequence segment "-##-" (hyphens).
+  // Match the FIRST occurrence of -<digits>- and take everything after it as the title.
+  let m=base.match(/^.*?-(\d+)-(.+)$/);
+  if(m && m[2].trim()){
+    return { title:m[2].trim(), order:parseInt(m[1],10) };
+  }
+  // Leading number form: "01-Title" or "01_Title"
+  m=base.match(/^(\d+)[-_](.+)$/);
+  if(m && m[2].trim()){
+    return { title:m[2].trim(), order:parseInt(m[1],10) };
+  }
+  // Legacy underscore convention: Collection-##_Title
+  const usIdx=base.indexOf('_');
+  if(usIdx>=0){
+    const prefix=base.slice(0,usIdx);
+    const title=base.slice(usIdx+1).trim();
+    const numMatch=prefix.match(/(\d+)\s*$/);
+    if(title) return { title, order:numMatch?parseInt(numMatch[1],10):null };
+  }
+  // No recognizable convention — use the whole stripped name, no order
+  return { title:base, order:null };
+}
 function makeId(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,8); }
 
 function makeGetter(headers){
@@ -761,8 +877,11 @@ function renderMasterDropdown(){
   });
   [[APP_CONFIG.VERSION_LEARNING,APP_CONFIG.VERSION_LEARNING_LABEL],[APP_CONFIG.VERSION_FINAL,APP_CONFIG.VERSION_FINAL_LABEL],['Other','Other']].forEach(([key,label])=>{
     if(!groups[key]||!groups[key].length) return;
-    const og=document.createElement('optgroup'); og.label=label;
-    groups[key].forEach(c=>{ const o=document.createElement('option'); o.value=c.colId; o.textContent=c.name; og.appendChild(o); });
+    // Prominent group label rendered in the option text itself (works in all browsers).
+    // Uppercase + separator bars make the version headers stand out.
+    const og=document.createElement('optgroup');
+    og.label='━━  '+label.toUpperCase()+'  ━━';
+    groups[key].forEach(c=>{ const o=document.createElement('option'); o.value=c.colId; o.textContent='    '+c.name; og.appendChild(o); });
     sel.appendChild(og);
   });
   if(prev) sel.value=prev;
@@ -921,7 +1040,10 @@ function computeDiff(){
     files.forEach((file,idx)=>{
       processedFileIds.add(file.id);
       const sheetTrack=sheetTrackByFile[file.id];
-      const driveName=stripExt(file.name);
+      // Derive the clean title (and order) from the filename convention
+      const parsed=parseTrackName(file.name);
+      const driveName=parsed.title;               // clean title, e.g. "Anuvakam 1"
+      const driveOrder=parsed.order;              // e.g. 1 (or null if not parseable)
       const trackStatus=sheetTrack
         ?(sheetTrack.name!==driveName?'renamed':'synced')
         :'new';
@@ -935,7 +1057,8 @@ function computeDiff(){
         sheetColId:sheetTrack?.colId||null,
         status:trackStatus,
         displayName:sheetTrack?.name||driveName,
-        order:sheetTrack?.order||(idx+1)
+        // Prefer existing sheet order; else the number parsed from the filename; else position
+        order:sheetTrack?.order||driveOrder||(idx+1)
       });
     });
 
@@ -1713,7 +1836,8 @@ document.getElementById('tm-record-btn').addEventListener('click',async()=>{
     const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
     recordedChunks=[];
     recordedBlob=null;
-    mediaRecorder=new MediaRecorder(stream);
+    const preferredMimeR=pickRecordingMime();
+    mediaRecorder=preferredMimeR?new MediaRecorder(stream,{mimeType:preferredMimeR}):new MediaRecorder(stream);
     mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) recordedChunks.push(e.data); };
     mediaRecorder.onstop=()=>{
       stream.getTracks().forEach(t=>t.stop());
@@ -1908,6 +2032,360 @@ document.getElementById('da-player-close').addEventListener('click',()=>{
   document.body.classList.remove('has-player');
   refreshDaPlayButtons();
 });
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// NEW COLLECTION — create folder + record tracks + auto-sync to Master Sheet
+// ══════════════════════════════════════════════════════════════════════════════
+let ncTracks = [];        // [{id, name, blob, mimeType, durationLabel}]
+let ncRecorder = null;
+let ncRecChunks = [];
+let ncRecTrackId = null;  // which track row is currently recording
+let ncRecTimer = null;
+let ncRecSeconds = 0;
+let ncTrackSeq = 0;
+let ncPreviewAudio = null;   // Audio element for in-modal preview
+let ncPreviewTrackId = null; // which track is being previewed
+
+// Pick the best recording format: prefer MP4/AAC (→ .m4a, matches existing files),
+// fall back to WebM where MP4 recording isn't supported (e.g. most Chrome builds).
+function pickRecordingMime(){
+  const prefs=['audio/mp4','audio/mp4;codecs=mp4a.40.2','audio/aac'];
+  for(const m of prefs){
+    if(window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) return m;
+  }
+  return ''; // let the browser choose (WebM/Opus on Chrome/Firefox)
+}
+
+function ncTogglePreview(trackId){
+  const track=ncTracks.find(t=>t.id===trackId);
+  if(!track || !track.blob) return;
+  // If this track is already playing, pause it
+  if(ncPreviewTrackId===trackId && ncPreviewAudio && !ncPreviewAudio.paused){
+    ncPreviewAudio.pause();
+    ncRenderTracks();
+    return;
+  }
+  // If paused on the same track, resume
+  if(ncPreviewTrackId===trackId && ncPreviewAudio && ncPreviewAudio.paused){
+    ncPreviewAudio.play().catch(()=>{});
+    ncRenderTracks();
+    return;
+  }
+  // New track — stop any existing preview and play this one
+  if(ncPreviewAudio){ ncPreviewAudio.pause(); ncPreviewAudio.src=''; }
+  ncPreviewAudio=new Audio(URL.createObjectURL(track.blob));
+  ncPreviewTrackId=trackId;
+  ncPreviewAudio.addEventListener('ended',()=>{ ncRenderTracks(); });
+  ncPreviewAudio.addEventListener('play',()=>{ ncRenderTracks(); });
+  ncPreviewAudio.addEventListener('pause',()=>{ ncRenderTracks(); });
+  ncPreviewAudio.play().catch(()=>{});
+  ncRenderTracks();
+}
+
+function ncStopPreview(){
+  if(ncPreviewAudio){ ncPreviewAudio.pause(); ncPreviewAudio.src=''; }
+  ncPreviewAudio=null; ncPreviewTrackId=null;
+}
+
+function ncOpen(){
+  ncTracks=[];
+  ncTrackSeq=0;
+  document.getElementById('nc-name-input').value='';
+  document.getElementById('nc-error').style.display='none';
+  // Default version = Final
+  document.querySelector('input[name="nc-version"][value="final"]').checked=true;
+  ncSyncVersionUI();
+  // Version labels from config
+  document.getElementById('nc-version-learning-label').textContent=APP_CONFIG.VERSION_LEARNING_LABEL;
+  document.getElementById('nc-version-final-label').textContent=APP_CONFIG.VERSION_FINAL_LABEL;
+  // Start with 3 empty track rows
+  ncAddTrack(); ncAddTrack(); ncAddTrack();
+  document.getElementById('nc-overlay').classList.add('show');
+}
+
+function ncClose(){
+  // Stop any active recording and preview
+  if(ncRecorder && ncRecorder.state==='recording'){ ncRecorder.stop(); ncStopTimer(); }
+  ncStopPreview();
+  document.getElementById('nc-overlay').classList.remove('show');
+  ncTracks=[];
+}
+
+function ncSyncVersionUI(){
+  const val=document.querySelector('input[name="nc-version"]:checked')?.value;
+  document.getElementById('nc-version-learning').classList.toggle('selected',val==='learning');
+  document.getElementById('nc-version-final').classList.toggle('selected',val==='final');
+}
+
+function ncAddTrack(){
+  ncTrackSeq++;
+  ncTracks.push({id:'nct_'+ncTrackSeq, name:'', blob:null, mimeType:'', durationLabel:''});
+  ncRenderTracks();
+}
+
+function ncRemoveTrack(id){
+  ncTracks=ncTracks.filter(t=>t.id!==id);
+  ncRenderTracks();
+}
+
+function ncRenderTracks(){
+  const list=document.getElementById('nc-tracks-list');
+  list.innerHTML='';
+  ncTracks.forEach((track,idx)=>{
+    const row=document.createElement('div');
+    row.className='nc-track-row';
+
+    const num=document.createElement('span');
+    num.className='nc-track-num';
+    num.textContent=String(idx+1).padStart(2,'0')+'_';
+    row.appendChild(num);
+
+    // If this row is actively recording, show the recording state
+    if(ncRecTrackId===track.id && ncRecorder && ncRecorder.state==='recording'){
+      const recWrap=document.createElement('div');
+      recWrap.className='nc-rec-active';
+      recWrap.innerHTML='<span class="nc-rec-dot"></span><span>Recording…</span><span class="nc-rec-timer" id="nc-rec-timer-'+track.id+'">0:00</span>';
+      row.appendChild(recWrap);
+      const stopBtn=document.createElement('button');
+      stopBtn.className='btn btn-danger btn-sm nc-track-rec-btn';
+      stopBtn.textContent='⏹ Stop';
+      stopBtn.addEventListener('click',()=>ncStopRecording());
+      row.appendChild(stopBtn);
+    } else {
+      const nameInput=document.createElement('input');
+      nameInput.className='nc-track-name';
+      nameInput.type='text';
+      nameInput.placeholder='Track name (e.g. Anuvakam 1)';
+      nameInput.value=track.name;
+      nameInput.addEventListener('input',e=>{ track.name=e.target.value; });
+      row.appendChild(nameInput);
+
+      // Play/pause preview button — only when a recording exists
+      if(track.blob){
+        const playBtn=document.createElement('button');
+        playBtn.className='btn btn-secondary btn-sm nc-track-rec-btn';
+        playBtn.title='Preview recording';
+        playBtn.textContent=(ncPreviewTrackId===track.id && ncPreviewAudio && !ncPreviewAudio.paused)?'⏸':'▶';
+        playBtn.addEventListener('click',()=>ncTogglePreview(track.id));
+        row.appendChild(playBtn);
+      }
+
+      const recBtn=document.createElement('button');
+      recBtn.className='btn btn-secondary btn-sm nc-track-rec-btn';
+      recBtn.textContent=track.blob?'⏺ Re-record':'⏺ Record';
+      recBtn.addEventListener('click',()=>ncStartRecording(track.id));
+      row.appendChild(recBtn);
+
+      const status=document.createElement('span');
+      status.className='nc-track-status '+(track.blob?'recorded':'empty');
+      status.textContent=track.blob?('✓ '+track.durationLabel):'— empty';
+      row.appendChild(status);
+
+      const del=document.createElement('button');
+      del.className='nc-track-del';
+      del.title='Remove track';
+      del.textContent='🗑';
+      del.addEventListener('click',()=>ncRemoveTrack(track.id));
+      row.appendChild(del);
+    }
+
+    list.appendChild(row);
+  });
+}
+
+async function ncStartRecording(trackId){
+  // Stop any other active recording and any preview first
+  if(ncRecorder && ncRecorder.state==='recording'){ ncRecorder.stop(); ncStopTimer(); }
+  ncStopPreview();
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    ncRecChunks=[];
+    ncRecTrackId=trackId;
+    const preferredMime=pickRecordingMime();
+    ncRecorder=preferredMime?new MediaRecorder(stream,{mimeType:preferredMime}):new MediaRecorder(stream);
+    ncRecorder.ondataavailable=e=>{ if(e.data.size>0) ncRecChunks.push(e.data); };
+    ncRecorder.onstop=()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      const mimeType=ncRecorder.mimeType||'audio/webm';
+      const blob=new Blob(ncRecChunks,{type:mimeType});
+      const track=ncTracks.find(t=>t.id===ncRecTrackId);
+      if(track){
+        track.blob=blob;
+        track.mimeType=mimeType;
+        const m=Math.floor(ncRecSeconds/60), s=ncRecSeconds%60;
+        track.durationLabel=m+':'+(s<10?'0':'')+s;
+      }
+      ncRecTrackId=null;
+      ncRenderTracks();
+    };
+    ncRecorder.start(100);
+    ncRecSeconds=0;
+    ncRenderTracks(); // switch row to recording state
+    ncStartTimer(trackId);
+  }catch(e){
+    ncShowError('Microphone access denied. Please allow microphone access and try again.');
+  }
+}
+
+function ncStopRecording(){
+  if(ncRecorder && ncRecorder.state==='recording'){ ncRecorder.stop(); ncStopTimer(); }
+}
+
+function ncStartTimer(trackId){
+  ncStopTimer();
+  ncRecTimer=setInterval(()=>{
+    ncRecSeconds++;
+    const m=Math.floor(ncRecSeconds/60), s=ncRecSeconds%60;
+    const el=document.getElementById('nc-rec-timer-'+trackId);
+    if(el) el.textContent=m+':'+(s<10?'0':'')+s;
+  },1000);
+}
+function ncStopTimer(){ clearInterval(ncRecTimer); }
+
+function ncShowError(msg){
+  const el=document.getElementById('nc-error');
+  el.textContent=msg; el.style.display='block';
+}
+
+// Create a new audio file inside a folder via multipart upload
+async function ncCreateAudioFile(folderId, filename, blob, mimeType){
+  const boundary='sama_veda_nc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  const metadata=JSON.stringify({name:filename, parents:[folderId]});
+  const metaPart=`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n`;
+  const dataPart=`--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`;
+  const closing=`\r\n--${boundary}--`;
+  const encoder=new TextEncoder();
+  const metaBytes=encoder.encode(metaPart);
+  const dataBytes=encoder.encode(dataPart);
+  const closeBytes=encoder.encode(closing);
+  const blobBytes=await blob.arrayBuffer();
+  const combined=new Uint8Array(metaBytes.length+dataBytes.length+blobBytes.byteLength+closeBytes.length);
+  let offset=0;
+  combined.set(metaBytes,offset); offset+=metaBytes.length;
+  combined.set(dataBytes,offset); offset+=dataBytes.length;
+  combined.set(new Uint8Array(blobBytes),offset); offset+=blobBytes.byteLength;
+  combined.set(closeBytes,offset);
+  const res=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',{
+    method:'POST',
+    headers:{Authorization:'Bearer '+accessToken,'Content-Type':`multipart/related; boundary=${boundary}`},
+    body:combined
+  });
+  if(!res.ok) throw new Error('Upload failed '+res.status+': '+(await res.text()).slice(0,150));
+  return res.json();
+}
+
+// Find or create a folder by name under a parent
+async function ncFindOrCreateFolder(parentId, name){
+  const q=`'${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and name='${name.replace(/'/g,"\\'")}' and trashed=false`;
+  const found=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=5`);
+  if(found.files && found.files.length>0) return found.files[0].id;
+  // Create it
+  const res=await fetch('https://www.googleapis.com/drive/v3/files?fields=id',{
+    method:'POST',
+    headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+    body:JSON.stringify({name, mimeType:'application/vnd.google-apps.folder', parents:[parentId]})
+  });
+  if(!res.ok) throw new Error('Folder create failed '+res.status);
+  return (await res.json()).id;
+}
+
+async function ncSave(){
+  document.getElementById('nc-error').style.display='none';
+  const name=document.getElementById('nc-name-input').value.trim();
+  const versionVal=document.querySelector('input[name="nc-version"]:checked')?.value;
+  const version=versionVal==='learning'?APP_CONFIG.VERSION_LEARNING:APP_CONFIG.VERSION_FINAL;
+
+  // Validation
+  if(!name){ ncShowError('Please enter a collection name.'); return; }
+  const tracksWithAudio=ncTracks.filter(t=>t.blob);
+  // Ensure every track WITH audio has a name
+  for(let i=0;i<ncTracks.length;i++){
+    const t=ncTracks[i];
+    if(t.blob && !t.name.trim()){ ncShowError(`Track ${String(i+1).padStart(2,'0')} has a recording but no name. Please name it.`); return; }
+  }
+
+  // Check for duplicate collection name in the same version (against Master Sheet)
+  const dup=sheetCollections.find(c=>
+    c.name.trim().toLowerCase()===name.toLowerCase() &&
+    (c.version||'').toLowerCase()===version.toLowerCase()
+  );
+  if(dup){ ncShowError(`A "${version}" collection named "${name}" already exists. Please use a different name.`); return; }
+
+  const saveBtn=document.getElementById('nc-save-btn');
+  saveBtn.disabled=true; saveBtn.textContent='Saving…';
+
+  try{
+    // 1. Ensure the version folder exists (Learning/ or Final/) under Collections
+    setLoading('Creating collection folder…');
+    const versionFolderId=await ncFindOrCreateFolder(COLLECTIONS_FOLDER_ID, version);
+
+    // 2. Check the collection folder doesn't already exist in Drive (belt & suspenders)
+    const colCheckQ=`'${versionFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and name='${name.replace(/'/g,"\\'")}' and trashed=false`;
+    const colCheck=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(colCheckQ)}&fields=files(id)&pageSize=1`);
+    if(colCheck.files && colCheck.files.length>0){
+      setView('main'); showMasterView();
+      saveBtn.disabled=false; saveBtn.textContent='Save collection';
+      document.getElementById('nc-overlay').classList.remove('show');
+      toast('A folder with that name already exists in Drive.','error');
+      return;
+    }
+
+    // 3. Create the collection folder
+    const colFolderId=await ncFindOrCreateFolder(versionFolderId, name);
+
+    // 4. Upload each track that has audio, prefixed by order
+    const uploaded=[]; // {name, fileId, order}
+    let order=0;
+    for(let i=0;i<ncTracks.length;i++){
+      const t=ncTracks[i];
+      if(!t.blob) continue; // skip empty
+      order++;
+      const ext=/mp4|aac|mpeg|m4a/i.test(t.mimeType)?'m4a':'webm';
+      const seq=String(i+1).padStart(2,'0');
+      // Filename: CollectionName-Sequence-TrackTitle.ext
+      const filename=`${name}-${seq}-${t.name.trim()}.${ext}`;
+      setLoading(`Uploading track ${order} of ${tracksWithAudio.length}…`);
+      const file=await ncCreateAudioFile(colFolderId, filename, t.blob, t.mimeType);
+      uploaded.push({name:t.name.trim(), fileId:file.id, order:i+1});
+    }
+
+    // 5. Auto-sync to Master Sheet: add collection row + track rows
+    setLoading('Updating Master Sheet…');
+    const colId=makeId('C');
+    await sheetsAppend('Collections!A:D',[[colId, name, colFolderId, version]]);
+    if(uploaded.length>0){
+      const trackRows=uploaded.map(u=>[makeId('T'), colId, u.name, u.fileId, u.order]);
+      await sheetsAppend('Tracks!A:E', trackRows);
+    }
+
+    // 6. Refresh master sheet data and return to the view with the new collection selected
+    await loadMasterSheet();
+    ncClose();
+    setView('main');
+    showMasterView();
+    const sel=document.getElementById('ms-collection-select');
+    sel.value=colId;
+    renderMasterTracks(colId);
+
+    const emptyCount=ncTracks.filter(t=>!t.blob && t.name.trim()).length;
+    toast(`Collection "${name}" created with ${uploaded.length} track${uploaded.length===1?'':'s'}.`+(emptyCount>0?' You can record the remaining tracks later.':''),'success');
+  }catch(e){
+    setView('main');
+    ncShowError('Could not save: '+e.message);
+    document.getElementById('nc-overlay').classList.add('show');
+  }finally{
+    saveBtn.disabled=false; saveBtn.textContent='Save collection';
+  }
+}
+
+// Wiring
+document.getElementById('ms-new-collection-btn').addEventListener('click',ncOpen);
+document.getElementById('nc-cancel-btn').addEventListener('click',ncClose);
+document.getElementById('nc-save-btn').addEventListener('click',ncSave);
+document.getElementById('nc-add-track-btn').addEventListener('click',ncAddTrack);
+document.getElementById('nc-overlay').addEventListener('click',e=>{ if(e.target===document.getElementById('nc-overlay')) ncClose(); });
+document.querySelectorAll('input[name="nc-version"]').forEach(r=>r.addEventListener('change',ncSyncVersionUI));
 
 // ── WIRE UP ───────────────────────────────────────────────────────────────────
 document.getElementById('sync-all-btn').addEventListener('click',syncAll);

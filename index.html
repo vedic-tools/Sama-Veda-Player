@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<!-- v2.1 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sama Veda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --saffron:#C45E1A; --saffron-lt:#F5E6D8; --saffron-dk:#9E4A12;
+    --ink:#1C1A16; --ink-mid:#4A4640; --ink-soft:#8A857C;
+    --parchment:#FAF7F2; --parchment-d:#F0EBE1; --white:#FFFFFF;
+    --danger:#C0392B; --danger-lt:#FDECEA;
+    --success:#2E7D32; --success-lt:#E8F5E9;
+    --learning:#1A56A4; --learning-lt:#EEF4FF;
+    --final:#2E7D32; --final-lt:#E8F5E9;
+    --info:#1A56A4; --info-lt:#EEF4FF;
+    --border:rgba(28,26,22,0.12); --border-md:rgba(28,26,22,0.22);
+    --radius:10px; --radius-lg:16px;
+    --sans:'Inter',system-ui,sans-serif; --serif:'Crimson Pro',Georgia,serif;
+    --player-h:90px;
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      --saffron:#E07830; --saffron-lt:#2E1E0E; --saffron-dk:#F09050;
+      --ink:#F0EBE1; --ink-mid:#C0B8AC; --ink-soft:#7A7570;
+      --parchment:#1A1816; --parchment-d:#141210; --white:#201E1A;
+      --danger:#EF5350; --danger-lt:#2A1010;
+      --success:#66BB6A; --success-lt:#0A2010;
+      --learning:#6B9FE4; --learning-lt:#0A1A3A;
+      --final:#66BB6A; --final-lt:#0A2010;
+      --info:#6B9FE4; --info-lt:#0A1A3A;
+      --border:rgba(240,235,225,0.10); --border-md:rgba(240,235,225,0.20);
+    }
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--sans);background:var(--parchment);color:var(--ink);min-height:100vh;padding-bottom:calc(var(--player-h) + 2rem);}
+
+  /* HEADER */
+  #site-header{background:var(--white);border-bottom:1px solid var(--border);padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:30;}
+  .logo{font-family:var(--serif);font-size:22px;font-weight:300;color:var(--ink);display:flex;align-items:center;gap:8px;}
+  .logo-dot{color:var(--saffron);font-size:28px;line-height:1;}
+  #user-area{display:flex;align-items:center;gap:10px;}
+  #learner-name-el{font-size:12px;color:var(--ink-soft);display:none;}
+  #logout-btn{font-family:var(--sans);font-size:12px;color:var(--ink-soft);background:none;border:1px solid var(--border-md);border-radius:6px;padding:4px 10px;cursor:pointer;display:none;transition:all 0.15s;}
+  #logout-btn:hover{color:var(--saffron);border-color:var(--saffron);background:var(--saffron-lt);}
+  #class-badge{display:none;font-size:12px;color:var(--ink-soft);background:var(--parchment-d);border-radius:20px;padding:3px 10px;cursor:pointer;transition:all 0.15s;border:1px solid var(--border);}
+  #class-badge:hover{border-color:var(--saffron);color:var(--saffron);}
+
+  /* ADMIN BAR */
+  #admin-bar{display:none;background:var(--info-lt);border-bottom:1px solid rgba(26,86,164,0.2);padding:8px 1.25rem;align-items:center;gap:12px;font-size:13px;color:var(--info);}
+  #admin-bar.show{display:flex;}
+  #admin-bar .admin-bar-label{font-weight:500;}
+  #admin-bar a{color:var(--info);font-weight:500;text-decoration:none;border:1px solid rgba(26,86,164,0.3);border-radius:6px;padding:3px 10px;transition:all 0.15s;white-space:nowrap;}
+  #admin-bar a:hover{background:var(--info);color:#fff;}
+  #admin-bar .admin-bar-links{display:flex;gap:8px;flex:1;flex-wrap:wrap;}
+  #admin-bar-close{background:none;border:none;color:var(--info);cursor:pointer;font-size:16px;padding:0 4px;opacity:0.6;transition:opacity 0.15s;flex-shrink:0;}
+  #admin-bar-close:hover{opacity:1;}
+
+  /* PAGE */
+  #page{max-width:680px;margin:0 auto;padding:1.5rem 1.25rem;}
+
+  /* VIEWS */
+  .view{display:none;}
+  .view.active{display:block;}
+  #signin-view.active,#login-view.active,#set-password-view.active,
+  #change-password-view.active,#class-select-view.active{
+    display:flex;flex-direction:column;align-items:center;padding:3.5rem 1rem 2rem;text-align:center;
+  }
+  #loading-view.active{display:flex;flex-direction:column;align-items:center;padding:5rem 1rem;gap:12px;}
+
+  /* SHARED FORM STYLES */
+  .auth-icon{font-size:44px;margin-bottom:1rem;opacity:0.8;}
+  .auth-title{font-family:var(--serif);font-size:26px;font-weight:300;font-style:italic;margin-bottom:0.5rem;}
+  .auth-sub{font-size:14px;color:var(--ink-soft);margin-bottom:1.75rem;max-width:360px;line-height:1.6;}
+  .auth-card{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;text-align:left;}
+  .field-label{font-size:12px;font-weight:500;color:var(--ink-mid);text-transform:uppercase;letter-spacing:0.04em;display:block;margin-bottom:4px;}
+  .shared-account-hint{font-size:12px;color:var(--ink-soft);background:var(--parchment-d);border-radius:var(--radius);padding:8px 12px;line-height:1.5;text-align:left;}
+  .shared-account-hint strong{color:var(--ink);}
+
+  /* INPUTS */
+  input[type="text"],input[type="password"]{font-family:var(--sans);font-size:14px;width:100%;height:42px;border:1px solid var(--border-md);border-radius:var(--radius);background:var(--white);color:var(--ink);padding:0 12px;outline:none;transition:border-color 0.15s,box-shadow 0.15s;}
+  input:focus{border-color:var(--saffron);box-shadow:0 0 0 3px var(--saffron-lt);}
+  input::placeholder{color:var(--ink-soft);}
+  select{font-family:var(--sans);font-size:14px;width:100%;height:42px;border:1px solid var(--border-md);border-radius:var(--radius);background:var(--white);color:var(--ink);padding:0 32px 0 12px;outline:none;transition:border-color 0.15s,box-shadow 0.15s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238A857C' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer;}
+  select:focus{border-color:var(--saffron);box-shadow:0 0 0 3px var(--saffron-lt);}
+
+  /* BUTTONS */
+  .btn{font-family:var(--sans);font-size:13px;font-weight:500;border-radius:var(--radius);padding:0 16px;height:42px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;border:none;white-space:nowrap;width:100%;}
+  .btn-primary{background:var(--saffron);color:#fff;}
+  .btn-primary:hover{background:var(--saffron-dk);}
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+  .btn-secondary{background:var(--white);color:var(--ink);border:1px solid var(--border-md);}
+  .btn-secondary:hover{background:var(--parchment-d);}
+  .btn-sm-inline{width:auto;height:36px;font-size:13px;padding:0 14px;}
+
+  /* ERROR / SUCCESS */
+  .error-text{display:none;font-size:13px;color:var(--danger);background:var(--danger-lt);border:1px solid rgba(192,57,43,0.2);border-radius:var(--radius);padding:10px 14px;line-height:1.5;}
+  .divider{border:none;border-top:1px solid var(--border);margin:4px 0;}
+  .forgot-hint{font-size:12px;color:var(--ink-soft);text-align:center;}
+
+  /* LOADING */
+  .spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--saffron);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-text{font-size:14px;color:var(--ink-soft);}
+  .mini-spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--saffron);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;flex-shrink:0;}
+  #finding-classes-row{display:none;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);}
+
+  /* VERSION TOGGLE */
+  #version-toggle-wrap{display:flex;align-items:center;gap:0;background:var(--parchment-d);border-radius:var(--radius-lg);padding:3px;margin-bottom:1.25rem;width:fit-content;}
+  .version-btn{font-family:var(--sans);font-size:13px;font-weight:500;height:34px;padding:0 18px;border:none;border-radius:calc(var(--radius-lg) - 3px);cursor:pointer;transition:all 0.18s;background:transparent;color:var(--ink-soft);display:flex;align-items:center;gap:6px;}
+  .version-btn.active-learning{background:var(--learning-lt);color:var(--learning);box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+  .version-btn.active-final{background:var(--final-lt);color:var(--final);box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+  .version-btn:not(.active-learning):not(.active-final):hover{background:var(--white);color:var(--ink);}
+
+  /* SEARCH */
+  .search-wrap{position:relative;margin-bottom:1.25rem;}
+  .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-soft);font-size:15px;pointer-events:none;}
+  #search-input{font-family:var(--sans);font-size:14px;width:100%;height:42px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--white);color:var(--ink);padding:0 12px 0 38px;outline:none;transition:border-color 0.15s,box-shadow 0.15s;}
+  #search-input:focus{border-color:var(--saffron);box-shadow:0 0 0 3px var(--saffron-lt);}
+  #search-input::placeholder{color:var(--ink-soft);}
+
+  /* SECTION LABEL */
+  .section-label{font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px;}
+
+  /* COLLECTION CARD */
+  .col-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden;transition:border-color 0.15s;}
+  .col-card:hover{border-color:var(--border-md);}
+  .col-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none;transition:background 0.12s;}
+  .col-header:hover{background:var(--parchment-d);}
+  .col-icon{width:38px;height:38px;border-radius:8px;background:var(--saffron-lt);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
+  .col-icon.learning{background:var(--learning-lt);}
+  .col-icon.final{background:var(--final-lt);}
+  .col-info{flex:1;min-width:0;}
+  .col-name{font-family:var(--serif);font-size:18px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
+  .col-meta{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .col-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .play-all-btn{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--saffron);background:var(--saffron-lt);border:1px solid rgba(196,94,26,0.25);border-radius:6px;padding:0 12px;height:30px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.12s;white-space:nowrap;}
+  .play-all-btn:hover{background:var(--saffron);color:#fff;}
+  .play-all-btn:disabled{opacity:0.35;cursor:not-allowed;}
+  .chevron{font-size:12px;color:var(--ink-soft);transition:transform 0.2s;width:16px;text-align:center;}
+  .chevron.open{transform:rotate(90deg);}
+
+  /* TRACK LIST */
+  .track-list{border-top:1px solid var(--border);}
+  .track-row{display:flex;align-items:center;gap:12px;padding:11px 16px 11px 20px;cursor:pointer;border-top:1px solid var(--border);transition:background 0.1s;position:relative;}
+  .track-row:first-child{border-top:none;}
+  .track-row:hover{background:var(--parchment);}
+  .track-row.playing{background:var(--saffron-lt);}
+  .track-row.playing::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--saffron);border-radius:0 2px 2px 0;}
+  .track-num{font-size:12px;color:var(--ink-soft);width:20px;text-align:right;flex-shrink:0;}
+  .track-row.playing .track-num{color:var(--saffron);}
+  .track-play-icon{font-size:11px;color:var(--ink-soft);flex-shrink:0;width:14px;text-align:center;}
+  .track-row.playing .track-play-icon,.track-row:hover .track-play-icon{color:var(--saffron);}
+  .track-name{font-family:var(--serif);font-size:16px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
+
+  /* COLLECTION TABS */
+  .col-tabs{display:flex;gap:2px;padding:8px 12px 0;background:var(--white);border-top:1px solid var(--border);}
+  .col-tab-btn{font-family:var(--sans);font-size:12px;font-weight:500;height:30px;padding:0 14px;border:none;border-radius:6px 6px 0 0;cursor:pointer;transition:all 0.15s;background:transparent;color:var(--ink-soft);}
+  .col-tab-btn.active{background:var(--parchment-d);color:var(--ink);}
+  .col-tab-btn:hover:not(.active){color:var(--ink);}
+  .col-tab-content{border-top:1px solid var(--border);}
+
+  /* DOCUMENT LIST */
+  .doc-list{padding:4px 0;}
+  .doc-row{display:flex;align-items:center;gap:10px;padding:9px 16px 9px 20px;cursor:pointer;border-top:1px solid var(--border);transition:background 0.1s;text-decoration:none;color:inherit;}
+  .doc-row:first-child{border-top:none;}
+  .doc-row:hover{background:var(--parchment);}
+  .doc-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
+  .doc-name{font-family:var(--serif);font-size:15px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .doc-type{font-size:10px;font-weight:500;color:var(--ink-soft);background:var(--parchment-d);border-radius:4px;padding:2px 6px;flex-shrink:0;text-transform:uppercase;}
+  .doc-loading{padding:14px 16px;font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:8px;}
+  .doc-empty{padding:14px 16px;font-size:13px;color:var(--ink-soft);}
+
+  /* EMPTY / NO VERSION */
+  #empty-state{display:none;text-align:center;padding:3rem 1rem;}
+  .empty-title{font-family:var(--serif);font-size:20px;font-weight:300;font-style:italic;color:var(--ink-mid);margin-bottom:6px;}
+  .empty-sub{font-size:13px;color:var(--ink-soft);}
+
+  /* PLAYER */
+  #player-bar{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--player-h);background:var(--white);border-top:1px solid var(--border);z-index:20;padding:10px 1.25rem;}
+  #player-inner{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:7px;}
+  #now-playing-row{display:flex;align-items:center;gap:10px;}
+  #now-playing-pip{width:8px;height:8px;border-radius:50%;background:var(--saffron);flex-shrink:0;animation:pulse 1.8s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.75);}}
+  #now-playing-text{flex:1;min-width:0;}
+  #now-playing-track{font-family:var(--serif);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
+  #now-playing-col{font-size:11px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #queue-badge{font-size:11px;color:var(--ink-soft);flex-shrink:0;background:var(--parchment-d);border-radius:20px;padding:2px 8px;display:none;}
+  audio{width:100%;height:28px;display:block;accent-color:var(--saffron);}
+
+  @media(max-width:480px){
+    #learner-name-el{display:none!important;}
+    .col-name{font-size:16px;}
+    .play-all-btn span{display:none;}
+    #version-toggle-wrap{width:100%;}
+    .version-btn{flex:1;justify-content:center;}
+  }
+</style>
+</head>
+<body>
+
+<header id="site-header">
+  <div class="logo"><span class="logo-dot">॰</span><span id="app-name-header">Sama Veda</span></div>
+  <div id="user-area">
+    <span id="learner-name-el"></span>
+    <span id="class-badge" title="Click to switch class"></span>
+    <button id="logout-btn">Sign out</button>
+  </div>
+</header>
+
+<!-- Admin quick-launch bar -->
+<div id="admin-bar">
+  <span class="admin-bar-label">⚙️ Admin access:</span>
+  <div class="admin-bar-links" id="admin-bar-links"></div>
+  <button id="admin-bar-close" title="Hide">✕</button>
+</div>
+
+<div id="page">
+
+  <!-- Step 1: Google sign-in -->
+  <div id="signin-view" class="view">
+    <div class="auth-icon">𝄞</div>
+    <div class="auth-title">Sama Veda</div>
+    <p class="auth-sub">Sign in with Google to access your class recordings.</p>
+    <div class="auth-card">
+      <div class="shared-account-hint">
+        Use your <strong>personal/individual Google account</strong> if you are comfortable doing so.<br><br>
+        Alternatively, use the shared class account:<br>
+        <strong id="shared-account-display">sama.learner@gmail.com</strong><br>
+        <span style="font-size:11px;">If you use the shared account, you will be asked to select your User ID on the next screen.</span><br><br>
+        <span style="font-size:11px;">For any questions, please reach out to your class admin.</span>
+      </div>
+      <button class="btn btn-primary" id="signin-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
+        Sign in with Google
+      </button>
+      <div class="error-text" id="signin-error"></div>
+    </div>
+  </div>
+
+  <!-- Step 2: UserID only -->
+  <div id="login-view" class="view">
+    <div class="auth-icon">🙏</div>
+    <div class="auth-title">Welcome</div>
+    <p class="auth-sub">You are signed in with the shared class account. Please select your User ID to load your class.</p>
+    <div class="auth-card">
+      <div>
+        <label class="field-label" for="userid-input">User ID</label>
+        <input type="text" id="userid-input" placeholder="Your user ID" autocomplete="username" autocapitalize="none" />
+      </div>
+      <button class="btn btn-primary" id="login-btn">Enter →</button>
+      <div class="error-text" id="login-error"></div>
+      <hr class="divider" />
+      <p class="forgot-hint">Don't know your User ID or having trouble? Contact your class admin.</p>
+    </div>
+  </div>
+
+  <!-- Class select (multi-class, standard flow only) -->
+  <div id="class-select-view" class="view">
+    <div class="auth-icon">📚</div>
+    <div class="auth-title">Select your class</div>
+    <p class="auth-sub">You have access to multiple class sheets.</p>
+    <div class="auth-card">
+      <div id="finding-classes-row"><div class="mini-spinner"></div><span>Finding your classes…</span></div>
+      <select id="class-sheet-select" style="display:none;"></select>
+      <button class="btn btn-primary" id="class-submit-btn" disabled>Open →</button>
+      <div class="error-text" id="class-select-error"></div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-view" class="view">
+    <div class="spinner"></div>
+    <p class="loading-text" id="loading-text">Loading…</p>
+  </div>
+
+  <!-- Main -->
+  <div id="main-view" class="view">
+    <div id="version-toggle-wrap">
+      <button class="version-btn" id="btn-learning" data-version="Learning">🎓 Learning mode</button>
+      <button class="version-btn" id="btn-final" data-version="Final">✓ Final version</button>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search-input" placeholder="Search collections or tracks…" autocomplete="off" />
+    </div>
+    <p class="section-label" id="section-label">Collections</p>
+    <div id="collections-list"></div>
+    <div id="empty-state">
+      <div class="empty-title">No results</div>
+      <p class="empty-sub">Try a different search term.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Player -->
+<div id="player-bar">
+  <div id="player-inner">
+    <div id="now-playing-row">
+      <div id="now-playing-pip"></div>
+      <div id="now-playing-text">
+        <div id="now-playing-track">—</div>
+        <div id="now-playing-col">—</div>
+      </div>
+      <span id="queue-badge"></span>
+    </div>
+    <audio id="audio-el" controls></audio>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+// ── CONFIG (loaded from config.js) ───────────────────────────────────────────
+const CLIENT_ID          = APP_CONFIG.CLIENT_ID;
+const MASTER_SHEET_ID    = APP_CONFIG.MASTER_SHEET_ID;
+const CLASSES_FOLDER_ID  = APP_CONFIG.CLASSES_FOLDER_ID;
+const DOCS_FOLDER_ID     = APP_CONFIG.DOCS_FOLDER_ID;
+const SHARED_ACCOUNT     = APP_CONFIG.SHARED_LEARNER_ACCOUNT;
+const SCOPES = [
+  'https://www.googleapis.com/auth/drive.readonly',
+  'https://www.googleapis.com/auth/spreadsheets.readonly',
+  'email',
+  'profile'
+].join(' ');
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let accessToken      = null;
+let tokenClient      = null;
+let activeSheetId    = null;
+let activeSheetName  = '';
+let allCollections   = [];
+let activeVersion    = 'Learning';
+let playQueue        = [];
+let queueIndex       = -1;
+let currentTrackId   = null;
+let availableSheets  = [];
+
+// Documents cache: {collectionName: [{id, name, mimeType}] | 'loading' | 'error'}
+let docsCache = {};
+
+// Student auth state
+let studentMode      = false; // true when Students tab has rows
+let currentStudent   = null;  // {rowIndex, userId, displayName, classSheetId}
+let allStudents      = [];    // parsed from Students tab
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function esc(s){ const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+function makeGetter(headers){
+  const lo=headers.map(h=>h.trim().toLowerCase());
+  return (row,key)=>{ const i=lo.indexOf(key.toLowerCase()); return i>=0?(row[i]||'').toString().trim():''; };
+}
+function parseSheet(data){
+  const rows=data.values||[];
+  if(!rows.length) return {get:()=>'',rows:[]};
+  return {get:makeGetter(rows[0]),rows:rows.slice(1).filter(r=>r.some(c=>c))};
+}
+
+// ── VIEWS ─────────────────────────────────────────────────────────────────────
+function setView(name){
+  ['signin','login','class-select','loading','main'].forEach(v=>{
+    const el=document.getElementById(v+'-view');
+    if(el) el.classList.toggle('active',v===name);
+  });
+}
+function setLoading(msg){ document.getElementById('loading-text').textContent=msg||'Loading…'; setView('loading'); }
+function showError(id,msg){ const el=document.getElementById(id); if(!el)return; el.textContent=msg; el.style.display=msg?'block':'none'; }
+function showSuccess(id,msg){ const el=document.getElementById(id); if(!el)return; el.textContent=msg; el.style.display=msg?'block':'none'; }
+
+// ── VERSION TOGGLE ────────────────────────────────────────────────────────────
+function setVersion(v){
+  activeVersion=v;
+  document.getElementById('btn-learning').className='version-btn'+(v===APP_CONFIG.VERSION_LEARNING?' active-learning':'');
+  document.getElementById('btn-final').className='version-btn'+(v===APP_CONFIG.VERSION_FINAL?' active-final':'');
+  renderCollections(document.getElementById('search-input').value);
+}
+// Set toggle button labels from config
+document.getElementById('btn-learning').textContent=APP_CONFIG.VERSION_LEARNING_LABEL;
+document.getElementById('btn-final').textContent=APP_CONFIG.VERSION_FINAL_LABEL;
+document.getElementById('btn-learning').addEventListener('click',()=>setVersion(APP_CONFIG.VERSION_LEARNING));
+document.getElementById('btn-final').addEventListener('click',()=>setVersion(APP_CONFIG.VERSION_FINAL));
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+function waitForGoogle(){
+  return new Promise((resolve,reject)=>{
+    let tries=0;
+    const t=setInterval(()=>{
+      if(window.google?.accounts?.oauth2){ clearInterval(t); resolve(); }
+      else if(++tries>120){ clearInterval(t); reject(new Error('Google sign-in library did not load.')); }
+    },100);
+  });
+}
+
+async function initAuth(){
+  try{
+    await waitForGoogle();
+    tokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:CLIENT_ID, scope:SCOPES,
+      callback:async(resp)=>{
+        if(resp.error){ showError('signin-error','Sign-in failed: '+resp.error); return; }
+        accessToken=resp.access_token;
+        showError('signin-error','');
+        // Decode email from id_token if present, else fetch via userinfo
+        try{
+          if(resp.id_token){
+            const payload=JSON.parse(atob(resp.id_token.split('.')[1]));
+            window._signedInEmail=(payload.email||'').toLowerCase();
+          }
+        }catch(_){}
+        await afterGoogleSignIn();
+      }
+    });
+    document.getElementById('signin-btn').addEventListener('click',()=>{
+      showError('signin-error','');
+      try{ tokenClient.requestAccessToken(); }
+      catch(e){ showError('signin-error','Could not open sign-in: '+e.message); }
+    });
+    document.getElementById('logout-btn').addEventListener('click',()=>{
+      if(accessToken) google.accounts.oauth2.revoke(accessToken,()=>{});
+      accessToken=null; activeSheetId=null; allCollections=[];
+      playQueue=[]; currentTrackId=null; currentStudent=null; studentMode=false;
+      document.getElementById('audio-el').src='';
+      document.getElementById('player-bar').style.display='none';
+      document.getElementById('admin-bar').classList.remove('show');
+      document.getElementById('logout-btn').style.display='none';
+      document.getElementById('learner-name-el').style.display='none';
+      document.getElementById('class-badge').style.display='none';
+      setView('signin');
+    });
+    document.getElementById('class-badge').addEventListener('click',()=>{
+      if(availableSheets.length>1) showClassSelector();
+    });
+  }catch(e){ showError('signin-error',e.message); }
+}
+
+// ── ADMIN ACCESS CHECK ────────────────────────────────────────────────────────
+async function checkAdminAccess(){
+  // Check editor access to Collections folder, Master Sheet, and Classes folder
+  // Show quick-launch links to admin apps for users who have access
+  const links=[];
+
+  async function canEdit(fileId){
+    try{
+      const url=`https://www.googleapis.com/drive/v3/files/${fileId}?fields=capabilities`;
+      const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+      if(!res.ok) return false;
+      const data=await res.json();
+      return data.capabilities?.canEdit===true;
+    }catch(_){ return false; }
+  }
+
+  // Check editor access in parallel:
+  // Drive Admin link  → editor on Collections folder OR Master Sheet
+  // Class Admin link  → editor on Classes folder
+  const [collectionsEdit, masterEdit, classesEdit] = await Promise.all([
+    APP_CONFIG.COLLECTIONS_FOLDER_ID ? canEdit(APP_CONFIG.COLLECTIONS_FOLDER_ID) : Promise.resolve(false),
+    canEdit(MASTER_SHEET_ID),
+    canEdit(CLASSES_FOLDER_ID)
+  ]);
+
+  if(collectionsEdit || masterEdit){
+    links.push({label:'🗄️ Group Admin', url:'group-admin.html'});
+  }
+  if(classesEdit){
+    links.push({label:'✏️ Class Admin', url:'class-admin.html'});
+  }
+
+  if(links.length>0){
+    const linksContainer=document.getElementById('admin-bar-links');
+    linksContainer.innerHTML='';
+    links.forEach(l=>{
+      const a=document.createElement('a');
+      a.href=l.url; a.target='_blank'; a.rel='noopener noreferrer';
+      a.textContent=l.label;
+      linksContainer.appendChild(a);
+    });
+    document.getElementById('admin-bar').classList.add('show');
+  }
+}
+
+// ── AFTER GOOGLE SIGN-IN ──────────────────────────────────────────────────────
+async function afterGoogleSignIn(){
+  setLoading('Checking access…');
+  try{
+    // Get signed-in email — try id_token first, then userinfo endpoint
+    let signedInEmail=window._signedInEmail||'';
+    if(!signedInEmail){
+      try{
+        const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{
+          headers:{Authorization:'Bearer '+accessToken}
+        });
+        const d=await r.json();
+        signedInEmail=(d.email||'').toLowerCase();
+      }catch(_){}
+    }
+    // Show email in header if element exists
+    const eEl=document.getElementById('user-email');
+    if(eEl){ eEl.textContent=signedInEmail; eEl.style.display=signedInEmail?'block':'none'; }
+    const logoutEl=document.getElementById('logout-btn');
+    if(logoutEl) logoutEl.style.display='block';
+
+    // Check admin access and show quick-launch links (non-blocking)
+    checkAdminAccess();
+
+    console.log('Signed-in email:', signedInEmail, '| Shared account:', SHARED_ACCOUNT.toLowerCase(), '| Match:', signedInEmail===SHARED_ACCOUNT.toLowerCase());
+    // Only activate student mode if signed in as the shared learner account
+    if(signedInEmail===SHARED_ACCOUNT.toLowerCase()){
+      // Try to read Students tab
+      try{
+        const studentsData=await sheetsFetch(MASTER_SHEET_ID,'Students!A:Z');
+        const st=parseSheet(studentsData);
+        if(st.rows.length>0){
+          studentMode=true;
+          allStudents=st.rows.map((r,i)=>({
+            rowIndex:i+2,
+            userId:st.get(r,'UserID'),
+            classSheetId:st.get(r,'ClassSheetID'),
+            displayName:st.get(r,'DisplayName')||st.get(r,'UserID')
+          })).filter(s=>s.userId&&s.classSheetId);
+          setView('login');
+          return;
+        }
+      }catch(_){}
+      // Shared account but no students tab — fall through to standard flow
+      studentMode=false;
+      await resolveClassSheet();
+    } else {
+      // Personal Google account — standard class discovery flow
+      studentMode=false;
+      allStudents=[];
+      await resolveClassSheet();
+    }
+  }catch(e){
+    studentMode=false;
+    await resolveClassSheet();
+  }
+}
+
+// ── STUDENT LOGIN ─────────────────────────────────────────────────────────────
+document.getElementById('login-btn').addEventListener('click',async()=>{
+  const userId=document.getElementById('userid-input').value.trim();
+  showError('login-error','');
+  if(!userId){ showError('login-error','Please enter your User ID.'); return; }
+  const student=allStudents.find(s=>s.userId.toLowerCase()===userId.toLowerCase());
+  if(!student){ showError('login-error','User ID not found. Check your User ID or contact your teacher.'); return; }
+  currentStudent=student;
+  await loadStudentClass();
+});
+
+document.getElementById('userid-input').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('login-btn').click(); });
+
+// ── LOAD STUDENT CLASS ────────────────────────────────────────────────────────
+async function loadStudentClass(){
+  const nameEl=document.getElementById('learner-name-el');
+  nameEl.textContent=currentStudent.displayName;
+  nameEl.style.display='inline';
+
+  // Find all class entries for this student
+  const studentClasses=allStudents.filter(s=>s.userId.toLowerCase()===currentStudent.userId.toLowerCase());
+
+  if(studentClasses.length===1){
+    // Single class — load directly
+    activeSheetId=studentClasses[0].classSheetId;
+    await loadData();
+  } else {
+    // Multiple classes — show class selector
+    availableSheets=[];
+    // Fetch sheet names for each class
+    setLoading('Loading your classes…');
+    await Promise.all(studentClasses.map(async s=>{
+      try{
+        const url=`https://sheets.googleapis.com/v4/spreadsheets/${s.classSheetId}?fields=properties.title`;
+        const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+        const data=await res.json();
+        availableSheets.push({id:s.classSheetId,name:data.properties?.title||s.classSheetId});
+      }catch(_){
+        availableSheets.push({id:s.classSheetId,name:s.classSheetId});
+      }
+    }));
+    availableSheets.sort((a,b)=>a.name.localeCompare(b.name));
+    showClassSelector();
+  }
+}
+
+// ── STANDARD FLOW (no student mode) ──────────────────────────────────────────
+async function resolveClassSheet(){
+  // Option C: ?sheet=ID in URL bypasses class discovery entirely
+  const urlSheetId=new URLSearchParams(window.location.search).get('sheet');
+  if(urlSheetId){
+    activeSheetId=urlSheetId;
+    activeSheetName=urlSheetId===MASTER_SHEET_ID?'Master Sheet':'';
+    await loadData();
+    return;
+  }
+
+  setLoading('Finding your class…');
+  try{
+    const sheets=await findAccessibleClassSheets();
+    availableSheets=sheets;
+    if(sheets.length===0){
+      activeSheetId=MASTER_SHEET_ID; activeSheetName='';
+      await loadData();
+    } else if(sheets.length===1){
+      activeSheetId=sheets[0].id; activeSheetName=sheets[0].name;
+      updateClassBadge();
+      await loadData();
+    } else {
+      showClassSelector();
+    }
+  }catch(e){
+    activeSheetId=MASTER_SHEET_ID; activeSheetName='';
+    await loadData();
+  }
+}
+
+async function findAccessibleClassSheets(){
+  const directQ=`'${CLASSES_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
+  const directRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(directQ)}&fields=files(id,name)&pageSize=100`);
+  let allFiles=[...(directRes.files||[])];
+  const folderQ=`'${CLASSES_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  const folderRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(folderQ)}&fields=files(id,name)&pageSize=100`);
+  await Promise.all((folderRes.files||[]).map(async folder=>{
+    const subQ=`'${folder.id}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
+    const subRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(subQ)}&fields=files(id,name)&pageSize=100`);
+    allFiles=[...allFiles,...(subRes.files||[])];
+  }));
+  const seen=new Set();
+  return allFiles.filter(f=>{ if(seen.has(f.id)) return false; seen.add(f.id); return true; }).sort((a,b)=>a.name.localeCompare(b.name)).map(f=>({id:f.id,name:f.name}));
+}
+
+function showClassSelector(){
+  setView('class-select');
+  const sel=document.getElementById('class-sheet-select');
+  const submitBtn=document.getElementById('class-submit-btn');
+  document.getElementById('finding-classes-row').style.display='none';
+  sel.innerHTML='<option value="">— Select a class —</option>';
+  availableSheets.forEach(s=>{ const o=document.createElement('option'); o.value=s.id; o.textContent=s.name; sel.appendChild(o); });
+  if(activeSheetId){ sel.value=activeSheetId; submitBtn.disabled=false; }
+  sel.style.display='block';
+  sel.onchange=()=>{ submitBtn.disabled=!sel.value; };
+  submitBtn.disabled=!sel.value;
+}
+
+document.getElementById('class-submit-btn').addEventListener('click',async()=>{
+  const sel=document.getElementById('class-sheet-select');
+  if(!sel.value) return;
+  const chosen=availableSheets.find(s=>s.id===sel.value);
+  activeSheetId=chosen.id; activeSheetName=chosen.name;
+  updateClassBadge(); await loadData();
+});
+
+function updateClassBadge(){
+  const badge=document.getElementById('class-badge');
+  if(activeSheetName&&availableSheets.length>1){
+    badge.textContent=activeSheetName+' ▾'; badge.style.display='inline-flex';
+  } else { badge.style.display='none'; }
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function driveFetch(url){
+  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  if(!res.ok) throw new Error('Drive '+res.status);
+  return res.json();
+}
+async function sheetsFetch(id,range){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}?_=${Date.now()}`;
+  const res=await fetch(url,{
+    headers:{Authorization:'Bearer '+accessToken},
+    cache:'no-store'
+  });
+  if(!res.ok) throw new Error('Sheets '+res.status+': '+(await res.text()).slice(0,200));
+  return res.json();
+}
+
+// ── LOAD DATA ─────────────────────────────────────────────────────────────────
+async function loadData(){
+  setLoading('Loading your collections…');
+  try{
+    const [colsData,tracksData]=await Promise.all([
+      sheetsFetch(activeSheetId,'Collections!A:Z'),
+      sheetsFetch(activeSheetId,'Tracks!A:Z')
+    ]);
+    const cols=parseSheet(colsData); const trks=parseSheet(tracksData);
+    const colMap={};
+    cols.rows.forEach(r=>{
+      const id=cols.get(r,'CollectionID'); if(!id) return;
+      const rawVersion=cols.get(r,'Version');
+      const version=rawVersion.toLowerCase()===APP_CONFIG.VERSION_LEARNING.toLowerCase()?APP_CONFIG.VERSION_LEARNING:APP_CONFIG.VERSION_FINAL;
+      colMap[id]={id,name:cols.get(r,'CollectionName')||id,version,tracks:[],expanded:false};
+    });
+    trks.rows.forEach(r=>{
+      const colId=trks.get(r,'CollectionID'); const fileId=trks.get(r,'DriveFileID');
+      if(!colId||!fileId||!colMap[colId]) return;
+      colMap[colId].tracks.push({id:trks.get(r,'TrackID')||fileId,name:trks.get(r,'TrackName')||'(unnamed)',fileId,order:parseInt(trks.get(r,'TrackOrder'))||999});
+    });
+    Object.values(colMap).forEach(c=>c.tracks.sort((a,b)=>a.order-b.order));
+    allCollections=Object.values(colMap).filter(c=>c.tracks.length>0);
+
+    const hasVersionData=allCollections.some(c=>c.version);
+    document.getElementById('version-toggle-wrap').style.display=hasVersionData?'flex':'none';
+    const hasLearning=allCollections.some(c=>c.version===APP_CONFIG.VERSION_LEARNING);
+    setView('main');
+    document.getElementById('logout-btn').style.display='block';
+    setVersion(hasLearning?APP_CONFIG.VERSION_LEARNING:APP_CONFIG.VERSION_FINAL);
+  }catch(e){
+    setView('signin');
+    showError('signin-error','Could not load data: '+e.message);
+  }
+}
+
+// ── DOCUMENTS ────────────────────────────────────────────────────────────────
+function getMimeIcon(mimeType, name){
+  if(mimeType==='application/pdf'||name.toLowerCase().endsWith('.pdf')) return '📄';
+  if(mimeType.includes('word')||name.toLowerCase().endsWith('.docx')) return '📝';
+  if(mimeType.includes('presentation')||name.toLowerCase().endsWith('.pptx')) return '📊';
+  if(mimeType.includes('spreadsheet')||name.toLowerCase().endsWith('.xlsx')) return '📋';
+  if(mimeType.includes('image')) return '🖼️';
+  if(mimeType.includes('audio')) return '🎵';
+  if(mimeType.includes('video')) return '🎬';
+  return '📎';
+}
+
+function getMimeLabel(mimeType, name){
+  if(mimeType==='application/pdf'||name.toLowerCase().endsWith('.pdf')) return 'PDF';
+  if(mimeType.includes('word')) return 'Word';
+  if(mimeType.includes('presentation')) return 'Slides';
+  if(mimeType.includes('spreadsheet')) return 'Sheet';
+  if(mimeType.includes('image')) return 'Image';
+  if(mimeType==='application/vnd.google-apps.document') return 'Doc';
+  if(mimeType==='application/vnd.google-apps.presentation') return 'Slides';
+  if(mimeType==='application/vnd.google-apps.spreadsheet') return 'Sheet';
+  return 'File';
+}
+
+function getDriveViewUrl(fileId, mimeType){
+  // Google Workspace files open in their native editor
+  if(mimeType.startsWith('application/vnd.google-apps.'))
+    return `https://drive.google.com/file/d/${fileId}/view`;
+  return `https://drive.google.com/file/d/${fileId}/view`;
+}
+
+async function fetchCollectionDocs(collectionName){
+  const key=collectionName.toLowerCase();
+  if(docsCache[key]) return docsCache[key];
+  docsCache[key]='loading';
+  try{
+    // Find subfolder in Collection Documents matching collection name
+    const folderQ=`'${DOCS_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+    const folderRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(folderQ)}&fields=files(id,name)&pageSize=100`);
+    const folders=folderRes.files||[];
+    const match=folders.find(f=>f.name.toLowerCase()===key);
+    if(!match){
+      docsCache[key]=[];
+      return [];
+    }
+    // List files inside the matching subfolder
+    const filesQ=`'${match.id}' in parents and trashed=false`;
+    const filesRes=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(filesQ)}&fields=files(id,name,mimeType)&orderBy=name&pageSize=100`);
+    const docs=(filesRes.files||[]).filter(f=>!f.mimeType.includes('folder'));
+    docsCache[key]=docs;
+    return docs;
+  }catch(e){
+    docsCache[key]=[];
+    return [];
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+const ICONS=['📿','🪘','🎵','🕉️','🎶','🪗','🎼','🔔'];
+function renderCollections(filterText){
+  const q=(filterText||'').trim().toLowerCase();
+  const container=document.getElementById('collections-list');
+  const emptyState=document.getElementById('empty-state');
+  const sectionLabel=document.getElementById('section-label');
+  container.innerHTML='';
+  const versionFiltered=allCollections.filter(c=>c.version===activeVersion); // activeVersion is set from APP_CONFIG.VERSION_LEARNING/FINAL
+  let anyVisible=false; let visibleCount=0;
+  if(versionFiltered.length===0){
+    container.innerHTML=`<div style="text-align:center;padding:3rem 1rem;"><div style="font-family:var(--serif);font-size:20px;font-style:italic;color:var(--ink-mid);margin-bottom:6px;">No ${activeVersion.toLowerCase()} collections yet</div><p style="font-size:13px;color:var(--ink-soft);">Ask your class admin to add ${activeVersion.toLowerCase()} mode tracks.</p></div>`;
+    emptyState.style.display='none';
+    sectionLabel.textContent=activeVersion+' mode';
+    return;
+  }
+  versionFiltered.forEach((col,ci)=>{
+    const colMatches=col.name.toLowerCase().includes(q);
+    const matchTracks=col.tracks.filter(t=>t.name.toLowerCase().includes(q));
+    const hasMatch=!q||colMatches||matchTracks.length>0;
+    if(!hasMatch) return;
+    anyVisible=true; visibleCount++;
+    const shouldExpand=q?true:col.expanded;
+    const tracksToShow=(q&&!colMatches)?matchTracks:col.tracks;
+    const card=document.createElement('div'); card.className='col-card';
+    const header=document.createElement('div'); header.className='col-header';
+    const iconClass=activeVersion==='Learning'?'learning':'final';
+    const iconEmoji=activeVersion==='Learning'?'🎓':'✓';
+    header.innerHTML=`
+      <div class="col-icon ${iconClass}">${iconEmoji}</div>
+      <div class="col-info">
+        <div class="col-name">${esc(col.name)}</div>
+        <div class="col-meta">${col.tracks.length} track${col.tracks.length===1?'':'s'}</div>
+      </div>
+      <div class="col-actions">
+        <button class="play-all-btn" ${col.tracks.length===0?'disabled':''}>▶ <span>Play all</span></button>
+        <span class="chevron ${shouldExpand?'open':''}">▶</span>
+      </div>`;
+    header.querySelector('.play-all-btn').addEventListener('click',e=>{ e.stopPropagation(); startQueue(col,col.tracks,0); });
+    header.addEventListener('click',()=>{ col.expanded=!shouldExpand; renderCollections(document.getElementById('search-input').value); });
+    card.appendChild(header);
+    if(shouldExpand){
+      // Tab bar
+      const tabBar=document.createElement('div');
+      tabBar.className='col-tabs';
+      const tracksTabBtn=document.createElement('button');
+      tracksTabBtn.className='col-tab-btn active';
+      tracksTabBtn.textContent='🎵 Tracks';
+      const docsTabBtn=document.createElement('button');
+      docsTabBtn.className='col-tab-btn';
+      docsTabBtn.textContent='📄 Documents';
+      tabBar.appendChild(tracksTabBtn);
+      tabBar.appendChild(docsTabBtn);
+      card.appendChild(tabBar);
+
+      // Tab content wrapper
+      const tabContent=document.createElement('div');
+      tabContent.className='col-tab-content';
+
+      // Tracks panel
+      const tracksPanel=document.createElement('div');
+      tracksPanel.className='track-list';
+      if(tracksToShow.length===0){
+        tracksPanel.innerHTML='<div style="padding:12px 16px;font-size:13px;color:var(--ink-soft);">No tracks</div>';
+      } else {
+        tracksToShow.forEach(track=>{
+          const isPlaying=track.id===currentTrackId;
+          const row=document.createElement('div');
+          row.className='track-row'+(isPlaying?' playing':'');
+          row.innerHTML=`<span class="track-num">${track.order}</span><span class="track-play-icon">${isPlaying?'♪':'▶'}</span><span class="track-name">${esc(track.name)}</span>`;
+          row.addEventListener('click',()=>startQueue(col,[track],0));
+          tracksPanel.appendChild(row);
+        });
+      }
+      tabContent.appendChild(tracksPanel);
+
+      // Documents panel (hidden initially)
+      const docsPanel=document.createElement('div');
+      docsPanel.style.display='none';
+      docsPanel.innerHTML='<div class="doc-loading"><div class="mini-spinner"></div>Loading documents…</div>';
+
+      let docsLoaded=false;
+      docsTabBtn.addEventListener('click',async()=>{
+        tracksTabBtn.classList.remove('active');
+        docsTabBtn.classList.add('active');
+        tracksPanel.style.display='none';
+        docsPanel.style.display='block';
+        if(!docsLoaded){
+          docsLoaded=true;
+          const docs=await fetchCollectionDocs(col.name);
+          docsPanel.innerHTML='';
+          if(docs==='loading'||docs.length===0){
+            docsPanel.innerHTML='<div class="doc-empty">No documents found for this collection.</div>';
+          } else {
+            const list=document.createElement('div');
+            list.className='doc-list';
+            docs.forEach(doc=>{
+              const a=document.createElement('a');
+              a.className='doc-row';
+              a.href=getDriveViewUrl(doc.id,doc.mimeType);
+              a.target='_blank';
+              a.rel='noopener noreferrer';
+              a.innerHTML=`
+                <span class="doc-icon">${getMimeIcon(doc.mimeType,doc.name)}</span>
+                <span class="doc-name">${esc(doc.name)}</span>
+                <span class="doc-type">${getMimeLabel(doc.mimeType,doc.name)}</span>
+              `;
+              list.appendChild(a);
+            });
+            docsPanel.appendChild(list);
+          }
+        }
+      });
+
+      tracksTabBtn.addEventListener('click',()=>{
+        docsTabBtn.classList.remove('active');
+        tracksTabBtn.classList.add('active');
+        docsPanel.style.display='none';
+        tracksPanel.style.display='block';
+      });
+
+      tabContent.appendChild(docsPanel);
+      card.appendChild(tabContent);
+    }
+    container.appendChild(card);
+  });
+  emptyState.style.display=anyVisible?'none':'block';
+  sectionLabel.textContent=q?`Results for "${filterText}"`:
+    `${visibleCount} ${activeVersion} collection${visibleCount===1?'':'s'}`;
+}
+
+// ── PLAYBACK ──────────────────────────────────────────────────────────────────
+const audioEl=document.getElementById('audio-el');
+function startQueue(col,tracks,startIdx){
+  playQueue=tracks.map(t=>({...t,collectionName:col.name})); queueIndex=startIdx; playItem();
+}
+function playItem(){
+  const item=playQueue[queueIndex]; if(!item) return;
+  currentTrackId=item.id;
+  fetch(`https://www.googleapis.com/drive/v3/files/${item.fileId}?alt=media`,{headers:{Authorization:'Bearer '+accessToken}})
+    .then(res=>{ if(!res.ok) throw new Error('Drive '+res.status); return res.blob(); })
+    .then(blob=>{ audioEl.src=URL.createObjectURL(blob); audioEl.play().catch(()=>{}); })
+    .catch(e=>showError('signin-error','Could not load audio: '+e.message));
+  document.getElementById('now-playing-track').textContent=item.name;
+  document.getElementById('now-playing-col').textContent=item.collectionName;
+  const badge=document.getElementById('queue-badge');
+  if(playQueue.length>1){ badge.textContent=`${queueIndex+1} / ${playQueue.length}`; badge.style.display='inline'; }
+  else badge.style.display='none';
+  document.getElementById('player-bar').style.display='block';
+  renderCollections(document.getElementById('search-input').value);
+}
+audioEl.addEventListener('ended',()=>{ if(queueIndex<playQueue.length-1){ queueIndex++; playItem(); } });
+
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+document.getElementById('search-input').addEventListener('input',e=>renderCollections(e.target.value));
+
+// ── ADMIN BAR CLOSE ───────────────────────────────────────────────────────────
+document.getElementById('admin-bar-close').addEventListener('click',()=>{
+  document.getElementById('admin-bar').classList.remove('show');
+});
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+// Set app name from config
+document.title=APP_CONFIG.APP_NAME;
+const nameEl=document.getElementById('app-name-header');
+if(nameEl) nameEl.textContent=APP_CONFIG.APP_NAME;
+// Update sign-in screen title
+const titleEl=document.querySelector('.auth-title');
+if(titleEl) titleEl.textContent=APP_CONFIG.APP_NAME;
+
+
+(async function boot(){ setView('signin'); await initAuth(); })();
+</script>
+</body>
+</html>
