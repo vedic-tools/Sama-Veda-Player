@@ -330,6 +330,13 @@
             </button>
           </div>
         </div>
+        <div id="sync-filter-bar" style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;font-size:13px;color:var(--ink-mid);">
+          <label style="display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+            <input type="checkbox" id="sync-filter-toggle" style="width:16px;height:16px;accent-color:var(--saffron);cursor:pointer;" />
+            <span>Show only collections needing sync</span>
+          </label>
+          <span id="sync-filter-count" style="color:var(--ink-soft);"></span>
+        </div>
         <div id="collections-container"></div>
       </div>
 
@@ -872,7 +879,10 @@ async function checkForSync(){
     computeDiff();
 
     setView('main');
-    // Show sync view
+    // Show sync view — reset the filter to show all on a fresh scan
+    syncFilterActive=false;
+    const filterToggle=document.getElementById('sync-filter-toggle');
+    if(filterToggle) filterToggle.checked=false;
     document.getElementById('ms-view').style.display='none';
     document.getElementById('sync-view').style.display='block';
     renderAll();
@@ -1038,16 +1048,42 @@ function statusBadge(status){
   return map[status]||'';
 }
 
+let syncFilterActive=false;
+
+function colNeedsSync(col){
+  // Needs sync if the collection is new/renamed/missing, has a pending name edit,
+  // or any of its tracks is new/renamed/missing or has a pending edit.
+  if(col.status==='new'||col.status==='renamed'||col.status==='missing') return true;
+  if(pendingNameEdits['col_'+col.folderId]) return true;
+  return col.tracks.some(t=>
+    t.status==='new'||t.status==='renamed'||t.status==='missing'||pendingNameEdits['track_'+t.fileId]
+  );
+}
+
 function renderCollections(){
   const container=document.getElementById('collections-container');
   container.innerHTML='';
+
+  // Update the filter count hint
+  const needingCount=diffData.filter(colNeedsSync).length;
+  const countEl=document.getElementById('sync-filter-count');
+  if(countEl){
+    countEl.textContent = needingCount===0
+      ? '· all in sync'
+      : `· ${needingCount} of ${diffData.length} need sync`;
+  }
 
   if(diffData.length===0){
     container.innerHTML='<div class="panel"><div class="empty-block"><div class="empty-title">No collections found</div><p>Add collection folders inside the Collections folder in Drive, then refresh.</p></div></div>';
     return;
   }
 
+  let shownCount=0;
   diffData.forEach((col,ci)=>{
+    // When the filter is active, skip collections that don't need sync
+    if(syncFilterActive && !colNeedsSync(col)) return;
+    shownCount++;
+
     const panel=document.createElement('div');
     panel.className='panel';
     panel.id='col-panel-'+ci;
@@ -1232,6 +1268,11 @@ function renderCollections(){
 
     container.appendChild(panel);
   });
+
+  // If filter is active and nothing needs sync, show a friendly message
+  if(syncFilterActive && shownCount===0){
+    container.innerHTML='<div class="panel"><div class="empty-block"><div class="empty-title">✓ Everything is in sync</div><p>No collections currently need syncing. Uncheck the filter to see all collections.</p></div></div>';
+  }
 }
 
 function countColChanges(col){
@@ -1873,6 +1914,7 @@ document.getElementById('sync-all-btn').addEventListener('click',syncAll);
 document.getElementById('ms-refresh-btn').addEventListener('click',async()=>{ setLoading('Refreshing…'); await loadMasterSheet(); setView('main'); showMasterView(); });
 document.getElementById('ms-check-sync-btn').addEventListener('click',checkForSync);
 document.getElementById('sync-back-btn').addEventListener('click',()=>{ setView('main'); showMasterView(); });
+document.getElementById('sync-filter-toggle').addEventListener('change',(e)=>{ syncFilterActive=e.target.checked; renderCollections(); });
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 // Set app name from config
