@@ -1894,10 +1894,20 @@ document.getElementById('tm-save-btn').addEventListener('click',async()=>{
   document.getElementById('tm-error').style.display='none';
 
   try{
-    await replaceTrackFile(currentModalTrack.fileId, blob,
-      selectedFile?selectedFile.name:currentModalTrack.name,
-      blob.type||'audio/webm'
-    );
+    const mimeType=blob.type||'audio/webm';
+    // Determine the correct extension for the new audio content
+    const newExt=/mp4|aac|mpeg|m4a/i.test(mimeType)?'m4a':(/wav/i.test(mimeType)?'wav':'webm');
+    // Preserve the existing Drive filename's base, just fix the extension.
+    // Fall back to the track title if we can't read the current name.
+    let baseName=currentModalTrack.name;
+    try{
+      const meta=await driveFetch(`https://www.googleapis.com/drive/v3/files/${currentModalTrack.fileId}?fields=name`);
+      if(meta && meta.name){ baseName=meta.name.replace(/\.[^/.]+$/,''); }
+    }catch(_){}
+    // If uploading a file, prefer keeping the existing base name (not the uploaded file's name),
+    // so the Collection-##-Title convention is preserved.
+    const finalName=`${baseName}.${newExt}`;
+    await replaceTrackFile(currentModalTrack.fileId, blob, finalName, mimeType);
     toast('Track replaced: '+currentModalTrack.name,'success');
     closeTrackModal();
   }catch(e){
@@ -2158,6 +2168,7 @@ function ncRenderTracks(){
       nameInput.type='text';
       nameInput.placeholder='Track name (e.g. Anuvakam 1)';
       nameInput.value=track.name;
+      nameInput.dataset.trackId=track.id;
       nameInput.addEventListener('input',e=>{ track.name=e.target.value; });
       row.appendChild(nameInput);
 
@@ -2249,6 +2260,32 @@ function ncShowError(msg){
 }
 
 // Create a new audio file inside a folder via multipart upload
+// Generate a tiny silent WAV file as a placeholder for tracks not yet recorded.
+// The admin records over it later via the Replace/Record buttons.
+function ncSilentWavBlob(seconds=1){
+  const sampleRate=8000;
+  const numSamples=sampleRate*seconds;
+  const dataSize=numSamples*2; // 16-bit mono
+  const buffer=new ArrayBuffer(44+dataSize);
+  const view=new DataView(buffer);
+  const writeStr=(off,str)=>{ for(let i=0;i<str.length;i++) view.setUint8(off+i,str.charCodeAt(i)); };
+  writeStr(0,'RIFF');
+  view.setUint32(4,36+dataSize,true);
+  writeStr(8,'WAVE');
+  writeStr(12,'fmt ');
+  view.setUint32(16,16,true);       // PCM chunk size
+  view.setUint16(20,1,true);        // PCM format
+  view.setUint16(22,1,true);        // mono
+  view.setUint32(24,sampleRate,true);
+  view.setUint32(28,sampleRate*2,true); // byte rate
+  view.setUint16(32,2,true);        // block align
+  view.setUint16(34,16,true);       // bits per sample
+  writeStr(36,'data');
+  view.setUint32(40,dataSize,true);
+  // samples are already zero (silence)
+  return new Blob([buffer],{type:'audio/wav'});
+}
+
 async function ncCreateAudioFile(folderId, filename, blob, mimeType){
   const boundary='sama_veda_nc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
   const metadata=JSON.stringify({name:filename, parents:[folderId]});
@@ -2296,14 +2333,23 @@ async function ncSave(){
   const versionVal=document.querySelector('input[name="nc-version"]:checked')?.value;
   const version=versionVal==='learning'?APP_CONFIG.VERSION_LEARNING:APP_CONFIG.VERSION_FINAL;
 
+  // Sync any visible track-name inputs back into the data model, in case the last
+  // keystroke's input event hadn't committed before Save was clicked.
+  document.querySelectorAll('#nc-tracks-list .nc-track-name').forEach(inp=>{
+    const t=ncTracks.find(x=>x.id===inp.dataset.trackId);
+    if(t) t.name=inp.value;
+  });
+
   // Validation
   if(!name){ ncShowError('Please enter a collection name.'); return; }
-  const tracksWithAudio=ncTracks.filter(t=>t.blob);
-  // Ensure every track WITH audio has a name
+  // We save every track that has a NAME (recorded or not). Fully-blank rows are skipped.
+  // A track with a recording but no name is an error.
   for(let i=0;i<ncTracks.length;i++){
     const t=ncTracks[i];
     if(t.blob && !t.name.trim()){ ncShowError(`Track ${String(i+1).padStart(2,'0')} has a recording but no name. Please name it.`); return; }
   }
+  const savableTracks=ncTracks.filter(t=>t.name.trim());
+  if(savableTracks.length===0){ ncShowError('Please add at least one track with a name.'); return; }
 
   // Check for duplicate collection name in the same version (against Master Sheet)
   const dup=sheetCollections.find(c=>
@@ -2334,20 +2380,25 @@ async function ncSave(){
     // 3. Create the collection folder
     const colFolderId=await ncFindOrCreateFolder(versionFolderId, name);
 
-    // 4. Upload each track that has audio, prefixed by order
-    const uploaded=[]; // {name, fileId, order}
+    // 4. Upload every NAMED track, prefixed by order. Tracks without a recording
+    //    get a short silent placeholder file so they have a real Drive file ID —
+    //    the admin records over them later via the Replace/Record buttons.
+    const uploaded=[]; // {name, fileId, order, placeholder}
     let order=0;
     for(let i=0;i<ncTracks.length;i++){
       const t=ncTracks[i];
-      if(!t.blob) continue; // skip empty
+      if(!t.name.trim()) continue; // skip fully-blank rows
       order++;
-      const ext=/mp4|aac|mpeg|m4a/i.test(t.mimeType)?'m4a':'webm';
-      const seq=String(i+1).padStart(2,'0');
+      const hasAudio=!!t.blob;
+      const blob=hasAudio?t.blob:ncSilentWavBlob(1);
+      const mimeType=hasAudio?t.mimeType:'audio/wav';
+      const ext=hasAudio?(/mp4|aac|mpeg|m4a/i.test(t.mimeType)?'m4a':'webm'):'wav';
+      const seq=String(order).padStart(2,'0');
       // Filename: CollectionName-Sequence-TrackTitle.ext
       const filename=`${name}-${seq}-${t.name.trim()}.${ext}`;
-      setLoading(`Uploading track ${order} of ${tracksWithAudio.length}…`);
-      const file=await ncCreateAudioFile(colFolderId, filename, t.blob, t.mimeType);
-      uploaded.push({name:t.name.trim(), fileId:file.id, order:i+1});
+      setLoading(`Uploading track ${order} of ${savableTracks.length}…`);
+      const file=await ncCreateAudioFile(colFolderId, filename, blob, mimeType);
+      uploaded.push({name:t.name.trim(), fileId:file.id, order, placeholder:!hasAudio});
     }
 
     // 5. Auto-sync to Master Sheet: add collection row + track rows
@@ -2368,12 +2419,13 @@ async function ncSave(){
     sel.value=colId;
     renderMasterTracks(colId);
 
-    const emptyCount=ncTracks.filter(t=>!t.blob && t.name.trim()).length;
-    toast(`Collection "${name}" created with ${uploaded.length} track${uploaded.length===1?'':'s'}.`+(emptyCount>0?' You can record the remaining tracks later.':''),'success');
+    const placeholderCount=uploaded.filter(u=>u.placeholder).length;
+    toast(`Collection "${name}" created with ${uploaded.length} track${uploaded.length===1?'':'s'}.`+(placeholderCount>0?` ${placeholderCount} awaiting audio — use ⏺ Record to add it.`:''),'success');
   }catch(e){
+    console.error('New Collection save failed:', e);
     setView('main');
-    ncShowError('Could not save: '+e.message);
     document.getElementById('nc-overlay').classList.add('show');
+    ncShowError('Could not save: '+(e && e.message ? e.message : e));
   }finally{
     saveBtn.disabled=false; saveBtn.textContent='Save collection';
   }
